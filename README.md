@@ -18,7 +18,7 @@ Real-time monitoring of multi-agent systems with constellation graph visualizati
 ### Cost Tracking
 Per-agent and per-provider spend attribution with 24h/7d/30d breakdowns, hourly charts, and anomaly detection.
 
-![Cost Control](./Screenshots/cost-control.png)
+![Cost Control](./Screenshots/cost-control.png?v=2)
 
 ### System Pulse
 Security posture monitoring: device tokens, OAuth status, FileVault, git hooks, config audit trail.
