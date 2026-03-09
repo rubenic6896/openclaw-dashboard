@@ -214,7 +214,8 @@ export async function GET() {
     const ram = getRam();
     const swap = getSwap();
     const disk = getDisk();
-    const gateway = await checkGatewayHttp(18789);
+    const gatewayPort = parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10);
+    const gateway = await checkGatewayHttp(gatewayPort);
     const openclaw = getOpenClawVersion();
 
     return NextResponse.json({

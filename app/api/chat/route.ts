@@ -5,7 +5,7 @@ import os from 'os';
 
 export const dynamic = 'force-dynamic';
 
-const GATEWAY_PORT = 18789;
+const GATEWAY_PORT = parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10);
 const MAX_QUESTION_LENGTH = 2000;
 const MAX_HISTORY = 6;
 

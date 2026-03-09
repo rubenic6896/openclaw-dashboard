@@ -66,7 +66,7 @@ export async function GET() {
       tailscaleConnected,
       tailscaleEndpoint,
       envExists,
-      gatewayPort: openclawConfig.gateway?.port || 18789,
+      gatewayPort: openclawConfig.gateway?.port || parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10),
       securityPosture,
       _meta: {
         source: 'openclaw',

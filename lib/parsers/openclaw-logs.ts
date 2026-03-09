@@ -126,7 +126,7 @@ export function parseGatewayStatus(dataDir?: string): GatewayStatus {
   const providerHealth = parseProviderHealth(dir);
 
   return {
-    port: config.gateway?.port || 18789,
+    port: config.gateway?.port || parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10),
     pid,
     uptime: Math.max(0, uptime),
     version,
