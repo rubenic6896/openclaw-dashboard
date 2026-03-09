@@ -1,0 +1,51 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getTechUpdates, getTechUpdateCategories, insertTechUpdate } from '@/lib/db/queries';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || undefined;
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const fields = searchParams.get('fields');
+
+    const updates = getTechUpdates({ category, limit });
+
+    // Lightweight dedup mode: return only url + title (~90% smaller response)
+    if (fields === 'dedup') {
+      return NextResponse.json({
+        updates: updates.map((u: any) => ({ url: u.url, title: u.title, date_iso: u.date_iso })),
+      });
+    }
+
+    const categories = getTechUpdateCategories();
+    return NextResponse.json({ updates, categories });
+  } catch (error: any) {
+    console.error('[tech-updates] GET error:', error.message, error.stack);
+    return NextResponse.json({ error: error.message, updates: [], categories: [] }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    console.log('[tech-updates] POST received:', Array.isArray(body) ? `${body.length} items` : '1 item');
+    const items = Array.isArray(body) ? body : [body];
+    for (const item of items) {
+      if (!item.url || !item.category_id || !item.category_label || !item.title) {
+        console.error('[tech-updates] Validation failed: missing required fields', JSON.stringify(item, null, 2));
+        return NextResponse.json(
+          { error: 'Required fields: url, category_id, category_label, title' },
+          { status: 400 },
+        );
+      }
+      insertTechUpdate(item);
+      console.log('[tech-updates] Inserted:', item.url);
+    }
+    return NextResponse.json({ inserted: items.length });
+  } catch (error: any) {
+    console.error('[tech-updates] POST error:', error.message, error.stack);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

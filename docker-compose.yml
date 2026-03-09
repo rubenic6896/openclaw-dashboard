@@ -1,0 +1,27 @@
+services:
+  mission-control:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: openclaw-dashboard
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+      - HOSTNAME=0.0.0.0
+      - OPENCLAW_HOME=/data/openclaw
+      - PROJECT_REPO_PATH=/data/project/repo
+      - DATA_DIR=/data/db
+    env_file:
+      - .env.docker
+    volumes:
+      - ~/.openclaw-dashboard:/data/db
+      - ~/.openclaw:/data/openclaw:ro
+      - ~/my-project:/data/project:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
