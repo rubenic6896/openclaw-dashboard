@@ -6,7 +6,7 @@ Thanks for your interest in contributing! Here's how to get started.
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/OpenClaw/openclaw-dashboard.git
+   git clone https://github.com/ChristianAlmurr/openclaw-dashboard
    cd openclaw-dashboard
    ```
 
