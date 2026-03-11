@@ -72,7 +72,7 @@ The dashboard is **read-heavy by design** — it reads from your local OpenClaw 
 
 ```bash
 # Clone the repository
-git clone https://github.com/ChristianAlmurr/openclaw-dashboard)
+git clone https://github.com/ChristianAlmurr/openclaw-dashboard
 cd openclaw-dashboard
 
 # Install dependencies
