@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Layers, Terminal, Beaker } from 'lucide-react';
 import { useDSReports, useDSSummary, useDSSeed } from '@/hooks/useDSReports';
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton';
+import { ErrorState } from '@/components/ErrorState';
 import FoundationsHealth from '@/components/ds/FoundationsHealth';
 import ComponentPipeline from '@/components/ds/ComponentPipeline';
 import QAVetoLog from '@/components/ds/QAVetoLog';
@@ -27,7 +28,8 @@ export default function DSBoardPage() {
   const summary = summaryQuery.data;
   const reports = reportsQuery.data?.reports ?? [];
   const isLoading = summaryQuery.isLoading || reportsQuery.isLoading;
-  const isEmpty = !isLoading && (summary?.aggregates?.totalReports ?? 0) === 0;
+  const fetchError = summaryQuery.error || reportsQuery.error;
+  const isEmpty = !isLoading && !fetchError && (summary?.aggregates?.totalReports ?? 0) === 0;
   const isDev = process.env.NODE_ENV !== 'production';
 
   return (
@@ -58,7 +60,12 @@ export default function DSBoardPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
+        {fetchError ? (
+          <ErrorState
+            message={fetchError instanceof Error ? fetchError.message : 'Failed to load design system data'}
+            onRetry={() => { summaryQuery.refetch(); reportsQuery.refetch(); }}
+          />
+        ) : isLoading ? (
           <div className="space-y-4 p-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <LoadingSkeleton variant="card" className="h-40" />
@@ -122,7 +129,7 @@ export default function DSBoardPage() {
 }
 
 function EmptyState({ isDev, onSeed, seeding }: { isDev: boolean; onSeed: () => void; seeding: boolean }) {
-  const curlSnippet = `curl -X POST http://localhost:3000/api/ds/run-reports \\
+  const curlSnippet = `curl -X POST http://localhost:3333/api/ds/run-reports \\
   -H "Content-Type: application/json" \\
   -d '{
     "run_id": "run-001",

@@ -117,15 +117,15 @@ export async function GET() {
       lastError: a.lastError,
     }));
 
-    // --- Inject NAAB advisory board agents ---
-    const NAAB_AGENTS: ConstellationNode[] = [
-      { id: 'naab-system-architect', name: 'System Architect', role: 'researcher', status: 'idle', modelPrimary: 'Gemini 3.1 Pro', provider: 'google', meta: { group: 'naab' } },
-      { id: 'naab-cost-optimizer', name: 'Cost Optimizer', role: 'researcher', status: 'idle', modelPrimary: 'Kimi K2.5', provider: 'other', meta: { group: 'naab' } },
-      { id: 'naab-gtm-strategist', name: 'GTM Strategist', role: 'designer', status: 'idle', modelPrimary: 'Claude Sonnet 4.5', provider: 'anthropic', meta: { group: 'naab' } },
+    // --- Inject advisory board agents ---
+    const ADVISORY_AGENTS: ConstellationNode[] = [
+      { id: 'system-architect', name: 'System Architect', role: 'researcher', status: 'idle', modelPrimary: 'Gemini 3.1 Pro', provider: 'google' },
+      { id: 'cost-optimizer', name: 'Cost Optimizer', role: 'researcher', status: 'idle', modelPrimary: 'Kimi K2.5', provider: 'other' },
+      { id: 'gtm-strategist', name: 'GTM Strategist', role: 'designer', status: 'idle', modelPrimary: 'Claude Sonnet 4.5', provider: 'anthropic' },
     ];
-    for (const naab of NAAB_AGENTS) {
-      if (!nodes.find((n) => n.id === naab.id)) {
-        nodes.push(naab);
+    for (const advisory of ADVISORY_AGENTS) {
+      if (!nodes.find((n) => n.id === advisory.id)) {
+        nodes.push(advisory);
       }
     }
 
@@ -185,9 +185,9 @@ export async function GET() {
       }
     }
 
-    // Single edge from orchestrator to NAAB cluster (via first agent as gateway)
+    // Single edge from orchestrator to advisory cluster (via first agent as gateway)
     if (orchestrator) {
-      const gatewayId = NAAB_AGENTS[0].id;
+      const gatewayId = ADVISORY_AGENTS[0].id;
       const edgeId = `edge-${orchestrator.id}-${gatewayId}`;
       if (!edges.find((e) => e.id === edgeId)) {
         edges.push({
@@ -201,16 +201,16 @@ export async function GET() {
       }
     }
 
-    // Inter-NAAB edges (fully connected triangle)
-    const naabIds = NAAB_AGENTS.map((n) => n.id);
-    for (let i = 0; i < naabIds.length; i++) {
-      for (let j = i + 1; j < naabIds.length; j++) {
-        const edgeId = `edge-naab-${naabIds[i]}-${naabIds[j]}`;
+    // Inter-advisory edges (fully connected triangle)
+    const advisoryIds = ADVISORY_AGENTS.map((n) => n.id);
+    for (let i = 0; i < advisoryIds.length; i++) {
+      for (let j = i + 1; j < advisoryIds.length; j++) {
+        const edgeId = `edge-advisory-${advisoryIds[i]}-${advisoryIds[j]}`;
         if (!edges.find((e) => e.id === edgeId)) {
           edges.push({
             id: edgeId,
-            from: naabIds[i],
-            to: naabIds[j],
+            from: advisoryIds[i],
+            to: advisoryIds[j],
             type: 'message',
             ratePerMin: 0.01,
             strength: 0.3,

@@ -3,6 +3,45 @@
 import { execSync } from 'child_process';
 
 // ============================================
+// TTL Cache — avoids re-executing CLI commands
+// on every polling request (every 30 s).
+// ============================================
+
+const cache = new Map<string, { data: unknown; expires: number }>();
+
+function cached<T>(key: string, ttlMs: number, fn: () => T): T {
+  const now = Date.now();
+  const entry = cache.get(key);
+  if (entry && entry.expires > now) return entry.data as T;
+  const data = fn();
+  cache.set(key, { data, expires: now + ttlMs });
+  return data;
+}
+
+/** Extract JSON from CLI output that may contain ANSI-colored plugin logs */
+function safeParseCliJson(raw: string): unknown {
+  const clean = raw.replace(/\x1b\[[0-9;]*m/g, '');
+  try { return JSON.parse(clean); } catch {}
+  const arrStart = clean.indexOf('[');
+  const objStart = clean.indexOf('{');
+  const start = arrStart === -1 ? objStart : objStart === -1 ? arrStart : Math.min(arrStart, objStart);
+  if (start === -1) throw new Error('No JSON in CLI output');
+  const opener = clean[start];
+  const closer = opener === '[' ? ']' : '}';
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < clean.length; i++) {
+    const ch = clean[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\' && inStr) { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === opener) depth++;
+    else if (ch === closer && --depth === 0) return JSON.parse(clean.slice(start, i + 1));
+  }
+  throw new Error('Unterminated JSON');
+}
+
+// ============================================
 // Model Display Name Mapping
 // ============================================
 
@@ -43,22 +82,25 @@ export interface OpenClawModelsOutput {
 }
 
 export function getOpenClawModels(): OpenClawModelsOutput {
-  try {
-    const output = execSync('openclaw models status --json', {
-      encoding: 'utf-8',
-      timeout: 10000,
-    });
-    const parsed = JSON.parse(output);
-    return {
-      defaultModel: parsed.defaultModel || parsed.resolvedDefault || '',
-      fallbacks: parsed.fallbacks || [],
-      aliases: parsed.aliases || {},
-      allowed: parsed.allowed || [],
-    };
-  } catch (error) {
-    console.error('[openclaw-cli] Failed to get models:', error);
-    return { defaultModel: '', fallbacks: [], aliases: {}, allowed: [] };
-  }
+  return cached<OpenClawModelsOutput>('models', 30_000, () => {
+    try {
+      const output = execSync('openclaw models status --json 2>/dev/null', {
+        encoding: 'utf-8',
+        timeout: 10000,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsed = safeParseCliJson(output) as any;
+      return {
+        defaultModel: parsed.defaultModel || parsed.resolvedDefault || '',
+        fallbacks: parsed.fallbacks || [],
+        aliases: parsed.aliases || {},
+        allowed: parsed.allowed || [],
+      };
+    } catch (error) {
+      console.error('[openclaw-cli] Failed to get models:', error);
+      return { defaultModel: '', fallbacks: [], aliases: {}, allowed: [] };
+    }
+  });
 }
 
 // ============================================
@@ -93,23 +135,25 @@ export interface OpenClawSessionsOutput {
  * Execute openclaw sessions --all-agents --json and return parsed output
  */
 export function getOpenClawSessions(): OpenClawSessionsOutput {
-  try {
-    const output = execSync('openclaw sessions --all-agents --json', {
-      encoding: 'utf-8',
-      timeout: 10000,
-    });
-    return JSON.parse(output);
-  } catch (error) {
-    console.error('[openclaw-cli] Failed to get sessions:', error);
-    return { 
-      path: null, 
-      stores: [], 
-      allAgents: true, 
-      count: 0, 
-      activeMinutes: null, 
-      sessions: [] 
-    };
-  }
+  return cached<OpenClawSessionsOutput>('sessions', 30_000, () => {
+    try {
+      const output = execSync('openclaw sessions --all-agents --json 2>/dev/null', {
+        encoding: 'utf-8',
+        timeout: 10000,
+      });
+      return safeParseCliJson(output) as OpenClawSessionsOutput;
+    } catch (error) {
+      console.error('[openclaw-cli] Failed to get sessions:', error);
+      return {
+        path: null,
+        stores: [],
+        allAgents: true,
+        count: 0,
+        activeMinutes: null,
+        sessions: []
+      };
+    }
+  });
 }
 
 /**
@@ -121,7 +165,7 @@ export function getOpenClawSessions(): OpenClawSessionsOutput {
 export function deriveStatusFromAge(ageMs: number): 'online' | 'idle' | 'offline' {
   const fiveMinutes = 5 * 60 * 1000;
   const sixtyMinutes = 60 * 60 * 1000;
-  
+
   if (ageMs < fiveMinutes) return 'online';
   if (ageMs < sixtyMinutes) return 'idle';
   return 'offline';
@@ -154,10 +198,10 @@ export function aggregateSessionsByAgent(sessions: OpenClawSession[]): Map<strin
     totalTokens: number;
     sessionCount: number;
   }>();
-  
+
   for (const session of sessions) {
     const existing = agentMap.get(session.agentId);
-    
+
     if (!existing || session.updatedAt > existing.latestSession.updatedAt) {
       agentMap.set(session.agentId, {
         latestSession: session,
@@ -173,7 +217,7 @@ export function aggregateSessionsByAgent(sessions: OpenClawSession[]): Map<strin
       existing.sessionCount += 1;
     }
   }
-  
+
   return agentMap;
 }
 
@@ -201,32 +245,32 @@ export interface ProviderProbeOutput {
 export function parseProbeOutput(output: string): ProviderProbeOutput {
   const results: ProviderProbeResult[] = [];
   const lines = output.split('\n');
-  
+
   let currentModel = '';
   let currentProfile = '';
   let currentStatus = '';
   let errorMessage = '';
-  
+
   for (const line of lines) {
-    // Match table rows like: │ model │ profile │ status · latency │
+    // Match table rows like: | model | profile | status . latency |
     const rowMatch = line.match(/│\s*([^│]+?)\s*│\s*([^│]+?)\s*│\s*([^│]+?)\s*│/);
-    
+
     if (rowMatch) {
       const [, model, profile, statusCol] = rowMatch;
-      
+
       // Skip header rows
       if (model.includes('Model') || model.includes('───')) continue;
-      
+
       // If we have a previous model pending, save it
       if (currentModel && currentStatus) {
         results.push(parseProbeResult(currentModel, currentProfile, currentStatus, errorMessage));
       }
-      
+
       currentModel = model.trim();
       currentProfile = profile.trim();
       currentStatus = statusCol.trim();
       errorMessage = '';
-      
+
       // Check for error message on next line (starts with ↳)
       const errorMatch = currentStatus.match(/↳\s*(.+)/);
       if (errorMatch) {
@@ -234,19 +278,19 @@ export function parseProbeOutput(output: string): ProviderProbeOutput {
         currentStatus = currentStatus.replace(/↳.*/, '').trim();
       }
     }
-    
+
     // Check for continuation line with error (↳)
     const errorLineMatch = line.match(/↳\s*(.+)/);
     if (errorLineMatch && currentModel) {
       errorMessage = errorLineMatch[1].trim();
     }
   }
-  
+
   // Don't forget the last entry
   if (currentModel && currentStatus) {
     results.push(parseProbeResult(currentModel, currentProfile, currentStatus, errorMessage));
   }
-  
+
   return {
     results,
     probeTime: Date.now(),
@@ -255,24 +299,24 @@ export function parseProbeOutput(output: string): ProviderProbeOutput {
 }
 
 function parseProbeResult(model: string, profile: string, statusCol: string, errorMessage: string): ProviderProbeResult {
-  // Parse status: "ok · 3.3s" or "ok · 205ms" or "auth · 188ms"
+  // Parse status: "ok . 3.3s" or "ok . 205ms" or "auth . 188ms"
   const statusMatch = statusCol.match(/(ok|auth|timeout|error)?\s*·?\s*(\d+(?:\.\d+)?)(ms|s)?/i);
-  
+
   let status: ProviderProbeResult['status'] = 'error';
   let latencyMs: number | null = null;
-  
+
   if (statusMatch) {
     status = (statusMatch[1]?.toLowerCase() as any) || 'ok';
     const latency = parseFloat(statusMatch[2]);
     const unit = statusMatch[3];
-    
+
     if (unit === 's') {
       latencyMs = latency * 1000;
     } else {
       latencyMs = latency;
     }
   }
-  
+
   return {
     model: model.trim(),
     profile: profile.trim(),
@@ -322,61 +366,63 @@ export interface OpenClawStatusOutput {
 }
 
 export function getOpenClawStatus(): OpenClawStatusOutput {
-  try {
-    const output = execSync('openclaw status --json 2>&1', {
-      encoding: 'utf-8',
-      timeout: 10000,
-    });
-    const parsed = JSON.parse(output);
-    
-    // Extract gateway info
-    const gateway = parsed.gateway || {};
-    const gatewayService = parsed.gatewayService || {};
-    
-    // Parse PID from runtimeShort like "running (pid 25350, state active)"
-    let pid: number | null = null;
-    let runtimeState = '';
-    const runtimeMatch = gatewayService.runtimeShort?.match(/running \(pid (\d+), state (\w+)\)/);
-    if (runtimeMatch) {
-      pid = parseInt(runtimeMatch[1], 10);
-      runtimeState = runtimeMatch[2];
+  return cached<OpenClawStatusOutput>('status', 30_000, () => {
+    try {
+      const output = execSync('openclaw status --json 2>&1', {
+        encoding: 'utf-8',
+        timeout: 10000,
+      });
+      const parsed = JSON.parse(output);
+
+      // Extract gateway info
+      const gateway = parsed.gateway || {};
+      const gatewayService = parsed.gatewayService || {};
+
+      // Parse PID from runtimeShort like "running (pid 25350, state active)"
+      let pid: number | null = null;
+      let runtimeState = '';
+      const runtimeMatch = gatewayService.runtimeShort?.match(/running \(pid (\d+), state (\w+)\)/);
+      if (runtimeMatch) {
+        pid = parseInt(runtimeMatch[1], 10);
+        runtimeState = runtimeMatch[2];
+      }
+
+      return {
+        gateway: {
+          mode: gateway.mode || 'unknown',
+          url: gateway.url || '',
+          reachable: gateway.reachable ?? false,
+          connectLatencyMs: gateway.connectLatencyMs ?? 0,
+          version: gateway.self?.version || '',
+          pid,
+          runtimeState,
+          error: gateway.error,
+        },
+        sessions: {
+          count: parsed.sessions?.count || 0,
+        },
+        agents: {
+          defaultId: parsed.agents?.defaultId || 'main',
+        },
+      };
+    } catch (error) {
+      console.error('[openclaw-cli] Failed to get status:', error);
+      return {
+        gateway: {
+          mode: 'unknown',
+          url: '',
+          reachable: false,
+          connectLatencyMs: 0,
+          version: '',
+          pid: null,
+          runtimeState: '',
+          error: String(error),
+        },
+        sessions: { count: 0 },
+        agents: { defaultId: 'main' },
+      };
     }
-    
-    return {
-      gateway: {
-        mode: gateway.mode || 'unknown',
-        url: gateway.url || '',
-        reachable: gateway.reachable ?? false,
-        connectLatencyMs: gateway.connectLatencyMs ?? 0,
-        version: gateway.self?.version || '',
-        pid,
-        runtimeState,
-        error: gateway.error,
-      },
-      sessions: {
-        count: parsed.sessions?.count || 0,
-      },
-      agents: {
-        defaultId: parsed.agents?.defaultId || 'main',
-      },
-    };
-  } catch (error) {
-    console.error('[openclaw-cli] Failed to get status:', error);
-    return {
-      gateway: {
-        mode: 'unknown',
-        url: '',
-        reachable: false,
-        connectLatencyMs: 0,
-        version: '',
-        pid: null,
-        runtimeState: '',
-        error: String(error),
-      },
-      sessions: { count: 0 },
-      agents: { defaultId: 'main' },
-    };
-  }
+  });
 }
 
 // ============================================

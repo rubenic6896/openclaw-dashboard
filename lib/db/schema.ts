@@ -83,7 +83,7 @@ const MIGRATIONS = [
         daily_spend_threshold REAL NOT NULL DEFAULT 15,
         key_rotation_reminder_days INTEGER NOT NULL DEFAULT 30,
         accent_color TEXT NOT NULL DEFAULT '#3b82f6',
-        mission_title TEXT NOT NULL DEFAULT 'Mission Control',
+        mission_title TEXT NOT NULL DEFAULT 'OpenClaw',
         profile_image TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -402,5 +402,45 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_practitioner_signals_type ON practitioner_signals(type);
       CREATE INDEX IF NOT EXISTS idx_practitioner_signals_date ON practitioner_signals(date_iso);
     `,
+  },
+  {
+    name: '019_reference_files',
+    sql: `
+      CREATE TABLE IF NOT EXISTS reference_files (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL DEFAULT '',
+        tags_json TEXT NOT NULL DEFAULT '[]',
+        project_id TEXT NOT NULL DEFAULT 'default',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        deleted INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE INDEX IF NOT EXISTS idx_ref_files_project ON reference_files(project_id);
+    `,
+  },
+  {
+    name: '020_competitors',
+    sql: `
+      CREATE TABLE IF NOT EXISTS competitors (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'Uncategorized',
+        project_id TEXT NOT NULL DEFAULT 'default',
+        last_updated TEXT,
+        swot_json TEXT,
+        updates_json TEXT,
+        feedback_json TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        deleted INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE INDEX IF NOT EXISTS idx_competitors_project ON competitors(project_id);
+    `,
+  },
+  {
+    name: '021_add_competitors_watched',
+    sql: `ALTER TABLE competitors ADD COLUMN watched INTEGER NOT NULL DEFAULT 0;`,
   },
 ];

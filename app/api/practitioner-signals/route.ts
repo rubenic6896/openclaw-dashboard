@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('[practitioner-signals] POST received:', JSON.stringify(body, null, 2));
     const items = Array.isArray(body) ? body : [body];
     
     for (const item of items) {
@@ -78,7 +77,6 @@ export async function POST(request: NextRequest) {
         date: validated.date,
         date_iso,
       });
-      console.log('[practitioner-signals] Inserted:', validated.url);
     }
     return NextResponse.json({ inserted: items.length });
   } catch (error: any) {

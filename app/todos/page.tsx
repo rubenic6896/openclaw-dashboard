@@ -69,7 +69,7 @@ const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
   { key: 'cancelled', label: 'Cancelled' },
 ];
 
-const ASSIGNEE_OPTIONS = ['Orchestrator', 'Developer Agent', 'QA Agent', 'Research Agent'];
+const ASSIGNEE_OPTIONS = ['Agent 1', 'Agent 2', 'Agent 3', 'Agent 4'];
 
 // ---------------------------------------------------------------------------
 // Small components

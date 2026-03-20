@@ -34,6 +34,59 @@ import type {
 } from '@/types';
 import { resolveHomePath, safeJsonParse, getOpenclawHome } from '@/lib/utils';
 
+// ============================================
+// TTL + mtime Cache
+// Caches parsed results for up to `ttlMs`.  The key includes the
+// file path and its mtime so the cache auto-invalidates when the
+// underlying file changes on disk.
+// ============================================
+
+const fileCache = new Map<string, { data: unknown; expires: number; mtimeMs: number }>();
+
+function cachedByFile<T>(filePath: string, ttlMs: number, fn: () => T): T {
+  const now = Date.now();
+  let currentMtime = 0;
+  try {
+    currentMtime = fs.statSync(filePath).mtimeMs;
+  } catch {
+    // File may not exist — just run fn() uncached
+    return fn();
+  }
+
+  const entry = fileCache.get(filePath);
+  if (entry && entry.expires > now && entry.mtimeMs === currentMtime) {
+    return entry.data as T;
+  }
+  const data = fn();
+  fileCache.set(filePath, { data, expires: now + ttlMs, mtimeMs: currentMtime });
+  return data;
+}
+
+/**
+ * Cache for directory-level results (e.g. parseAgentData which scans
+ * multiple files).  Uses a composite key and the mtime of the
+ * directory itself (updated when files are added/removed).
+ */
+const dirCache = new Map<string, { data: unknown; expires: number; mtimeMs: number }>();
+
+function cachedByDir<T>(dirPath: string, ttlMs: number, fn: () => T): T {
+  const now = Date.now();
+  let currentMtime = 0;
+  try {
+    currentMtime = fs.statSync(dirPath).mtimeMs;
+  } catch {
+    return fn();
+  }
+
+  const entry = dirCache.get(dirPath);
+  if (entry && entry.expires > now && entry.mtimeMs === currentMtime) {
+    return entry.data as T;
+  }
+  const data = fn();
+  dirCache.set(dirPath, { data, expires: now + ttlMs, mtimeMs: currentMtime });
+  return data;
+}
+
 function getDataDir(configDir?: string): string {
   return resolveHomePath(configDir || getOpenclawHome());
 }
@@ -126,7 +179,7 @@ export function parseGatewayStatus(dataDir?: string): GatewayStatus {
   const providerHealth = parseProviderHealth(dir);
 
   return {
-    port: config.gateway?.port || parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10),
+    port: config.gateway?.port || 18789,
     pid,
     uptime: Math.max(0, uptime),
     version,
@@ -171,7 +224,7 @@ function parseProviderHealth(dir: string): Record<string, ProviderHealth> {
 // --- Agent Data ---
 
 const AGENT_DISPLAY_NAMES: Record<string, string> = {
-  main: 'Orchestrator',
+  main: 'OpenClaw',
   developer: 'Developer',
   'qa-frontend': 'QA Frontend',
   researcher: 'Researcher',
@@ -180,12 +233,25 @@ const AGENT_DISPLAY_NAMES: Record<string, string> = {
 
 export function parseAgentData(dataDir?: string, options?: { timeframe?: { days: number } }): AgentData[] {
   const dir = getDataDir(dataDir);
+  const agentsBaseDir = path.join(dir, 'agents');
+
+  // When no timeframe filter is used we can safely cache the full result
+  // for 30 seconds, keyed by the agents directory mtime.
+  if (!options?.timeframe) {
+    return cachedByDir<AgentData[]>(agentsBaseDir, 30_000, () =>
+      parseAgentDataInner(dir, dataDir, options),
+    );
+  }
+  return parseAgentDataInner(dir, dataDir, options);
+}
+
+function parseAgentDataInner(dir: string, dataDir: string | undefined, options?: { timeframe?: { days: number } }): AgentData[] {
   const agents: AgentData[] = [];
   const config = parseMainConfig(dataDir) as any;
   console.log('[PARSER DEBUG] config.agents:', JSON.stringify(config.agents, null, 2));
   const defaultModel = config.agents?.defaults?.model?.primary || config.agents?.defaults?.model || 'claude-sonnet-4-6';
   console.log('[PARSER DEBUG] defaultModel:', defaultModel);
-  const assistantName = config.ui?.assistantName || 'Orchestrator';
+  const assistantName = config.ui?.assistantName || 'OpenClaw';
 
   // Get agent list from config - this is the authoritative source
   const agentList = config.agents?.list || [];
@@ -228,7 +294,7 @@ export function parseAgentData(dataDir?: string, options?: { timeframe?: { days:
         for (const file of files) {
           const content = readFileIfExists(path.join(sessionsDir, file));
           if (!content) continue;
-          
+
           for (const line of content.split('\n').filter(Boolean)) {
             try {
               const entry = JSON.parse(line);
@@ -261,7 +327,7 @@ export function parseAgentData(dataDir?: string, options?: { timeframe?: { days:
     }
 
     const recentTasks = parseSessionTasks(`agent:${agentDir}:main`, path.join(agentsBaseDir, agentDir));
-    
+
     sessionDataMap.set(agentDir, {
       tokensIn: totalTokensIn,
       tokensOut: totalTokensOut,
@@ -442,110 +508,113 @@ function extractSessionName(sessionKey: string): string {
 
 function parseSessionTasks(sessionKey: string, dir: string): AgentTask[] {
   const sessionsDir = path.join(dir, 'sessions');
-  const tasks: AgentTask[] = [];
 
-  try {
-    // Get JSONL files sorted by mtime (most recent first)
-    const allFiles = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
-    const filesWithStats = allFiles.map(f => {
-      const fp = path.join(sessionsDir, f);
-      try {
-        const stat = fs.statSync(fp);
-        return { name: f, path: fp, mtime: stat.mtimeMs };
-      } catch {
-        return null;
-      }
-    }).filter(Boolean) as { name: string; path: string; mtime: number }[];
+  return cachedByDir<AgentTask[]>(sessionsDir, 30_000, () => {
+    const tasks: AgentTask[] = [];
 
-    filesWithStats.sort((a, b) => b.mtime - a.mtime);
-
-    // Process last 5 session files
-    for (const fileInfo of filesWithStats.slice(0, 5)) {
-      const content = readFileIfExists(fileInfo.path);
-      if (!content) continue;
-
-      const lines = content.split('\n').filter(Boolean);
-
-      // Track session-level info
-      let sessionStartTs = '';
-      let lastAssistantTs = '';
-
-      for (const line of lines) {
+    try {
+      // Get JSONL files sorted by mtime (most recent first)
+      const allFiles = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
+      const filesWithStats = allFiles.map(f => {
+        const fp = path.join(sessionsDir, f);
         try {
-          const entry = JSON.parse(line);
+          const stat = fs.statSync(fp);
+          return { name: f, path: fp, mtime: stat.mtimeMs };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean) as { name: string; path: string; mtime: number }[];
 
-          // Track session start
-          if (entry.type === 'session' && entry.timestamp) {
-            sessionStartTs = entry.timestamp;
-          }
+      filesWithStats.sort((a, b) => b.mtime - a.mtime);
 
-          // Parse assistant messages — the actual JSONL format nests under message.*
-          if (entry.type === 'message' && entry.message?.role === 'assistant') {
-            const msg = entry.message;
-            const usage = msg.usage;
-            const content = msg.content;
-            const ts = entry.timestamp || '';
+      // Process last 5 session files
+      for (const fileInfo of filesWithStats.slice(0, 5)) {
+        const content = readFileIfExists(fileInfo.path);
+        if (!content) continue;
 
-            // Extract description from content
-            let description = 'Agent response';
-            if (Array.isArray(content)) {
-              // Look for text content first
-              const textBlock = content.find((c: any) => c.type === 'text' && c.text);
-              if (textBlock) {
-                description = textBlock.text.slice(0, 200);
-              } else {
-                // Look for tool calls
-                const toolCalls = content.filter((c: any) => c.type === 'toolCall');
-                if (toolCalls.length > 0) {
-                  const toolNames = toolCalls.map((tc: any) => tc.name).join(', ');
-                  description = `Tool calls: ${toolNames}`;
-                }
-              }
-            } else if (typeof content === 'string') {
-              description = content.slice(0, 200);
+        const lines = content.split('\n').filter(Boolean);
+
+        // Track session-level info
+        let sessionStartTs = '';
+        let lastAssistantTs = '';
+
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+
+            // Track session start
+            if (entry.type === 'session' && entry.timestamp) {
+              sessionStartTs = entry.timestamp;
             }
 
-            // Extract tool call names
-            const toolCalls = Array.isArray(content)
-              ? content.filter((c: any) => c.type === 'toolCall').map((c: any) => c.name)
-              : [];
+            // Parse assistant messages — the actual JSONL format nests under message.*
+            if (entry.type === 'message' && entry.message?.role === 'assistant') {
+              const msg = entry.message;
+              const usage = msg.usage;
+              const content = msg.content;
+              const ts = entry.timestamp || '';
 
-            const totalTokens = usage?.totalTokens || 0;
-            const cost = usage?.cost?.total || 0;
-            const model = msg.model || '';
-            const stopReason = msg.stopReason || '';
+              // Extract description from content
+              let description = 'Agent response';
+              if (Array.isArray(content)) {
+                // Look for text content first
+                const textBlock = content.find((c: any) => c.type === 'text' && c.text);
+                if (textBlock) {
+                  description = textBlock.text.slice(0, 200);
+                } else {
+                  // Look for tool calls
+                  const toolCalls = content.filter((c: any) => c.type === 'toolCall');
+                  if (toolCalls.length > 0) {
+                    const toolNames = toolCalls.map((tc: any) => tc.name).join(', ');
+                    description = `Tool calls: ${toolNames}`;
+                  }
+                }
+              } else if (typeof content === 'string') {
+                description = content.slice(0, 200);
+              }
 
-            tasks.push({
-              id: entry.id || `task-${tasks.length}`,
-              agentId: sessionKey,
-              description,
-              status: stopReason === 'stop' || stopReason === 'toolUse' ? 'completed' : 'running',
-              startedAt: lastAssistantTs || sessionStartTs || ts,
-              completedAt: ts,
-              tokensUsed: totalTokens,
-              costUSD: cost,
-              errorMessage: null,
-              model,
-              toolCalls,
-            });
+              // Extract tool call names
+              const toolCalls = Array.isArray(content)
+                ? content.filter((c: any) => c.type === 'toolCall').map((c: any) => c.name)
+                : [];
 
-            lastAssistantTs = ts;
-          }
-        } catch {}
+              const totalTokens = usage?.totalTokens || 0;
+              const cost = usage?.cost?.total || 0;
+              const model = msg.model || '';
+              const stopReason = msg.stopReason || '';
+
+              tasks.push({
+                id: entry.id || `task-${tasks.length}`,
+                agentId: sessionKey,
+                description,
+                status: stopReason === 'stop' || stopReason === 'toolUse' ? 'completed' : 'running',
+                startedAt: lastAssistantTs || sessionStartTs || ts,
+                completedAt: ts,
+                tokensUsed: totalTokens,
+                costUSD: cost,
+                errorMessage: null,
+                model,
+                toolCalls,
+              });
+
+              lastAssistantTs = ts;
+            }
+          } catch {}
+        }
+
+        // We have enough tasks from recent sessions
+        if (tasks.length >= 10) break;
       }
+    } catch {}
 
-      // We have enough tasks from recent sessions
-      if (tasks.length >= 10) break;
-    }
-  } catch {}
-
-  // Return the most recent 10 tasks
-  return tasks.slice(-10);
+    // Return the most recent 10 tasks
+    return tasks.slice(-10);
+  });
 }
 
 function detectProvider(model: string): AgentData['provider'] {
   const lower = model.toLowerCase();
-  
+
   // Handle kilocode/provider/model format
   if (lower.startsWith('kilocode/')) {
     const parts = lower.split('/');
@@ -560,7 +629,7 @@ function detectProvider(model: string): AgentData['provider'] {
       if (providerPart.includes('z-ai')) return 'openrouter'; // Z-AI via OpenRouter
     }
   }
-  
+
   // Fallback to model name detection
   if (lower.includes('claude') || lower.includes('anthropic')) return 'anthropic';
   if (lower.includes('gpt') || lower.includes('o1') || lower.includes('o3') || lower.includes('openai')) return 'openai';

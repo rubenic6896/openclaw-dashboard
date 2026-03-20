@@ -13,53 +13,40 @@ interface ReleaseEntry {
 
 const RELEASES: ReleaseEntry[] = [
   {
+    version: '2.0.0',
+    date: '2026-03-19',
+    tag: 'major',
+    changes: [
+      { type: 'feat', text: 'Multi-view home dashboard with 4 switchable views: Org Map, Grid, Feed, Constellation' },
+      { type: 'feat', text: 'Interactive agent chat with real-time SSE streaming and multimodal support' },
+      { type: 'feat', text: 'Advanced cost analytics with optimization scoring and anomaly detection' },
+      { type: 'feat', text: 'Kanban board with ticket chat, agent assignment, and automation' },
+      { type: 'feat', text: 'Cron pipeline builder with visual DAG editor and execution history' },
+      { type: 'feat', text: 'Memory health monitor with AI-driven analysis and reindex controls' },
+      { type: 'feat', text: 'Rich text editor with markdown, tables, code blocks, and image support' },
+      { type: 'feat', text: 'Reference file management with tag-based organization' },
+      { type: 'feat', text: 'Competitor intelligence with discovery and profiling' },
+      { type: 'feat', text: 'Global search across all data types' },
+      { type: 'feat', text: 'Live stream widget for real-time activity monitoring' },
+      { type: 'feat', text: '10-step onboarding wizard with auto-detection and feature selection' },
+      { type: 'feat', text: 'Full settings page with branding, avatars, and operator profile' },
+      { type: 'perf', text: 'Upgraded to Next.js 16, React 19, Tailwind CSS 4' },
+      { type: 'refactor', text: 'Apple-inspired glass design system with full accent color customization' },
+      { type: 'refactor', text: 'Expanded from 25 to 52 API endpoints' },
+    ],
+  },
+  {
     version: '1.1.0',
-    date: '2026-03-06',
+    date: '2026-03-09',
     tag: 'minor',
     changes: [
-      { type: 'feat', text: 'Organism visualization tab — bio-luminescent cell rendering with force-directed layout' },
-      { type: 'feat', text: 'NAAB Advisory Board cluster with amber color scheme and cluster-boundary connection' },
+      { type: 'feat', text: 'Constellation graph visualization with force-directed layout' },
       { type: 'feat', text: 'Release logs page with full version history' },
-      { type: 'feat', text: 'Project rename and multi-project support in sidebar' },
-      { type: 'feat', text: 'Memory Log updated to reflect mem0 integration (episodic/factual memory types)' },
-      { type: 'perf', text: 'Reduced polling intervals across all hooks (5-15s to 30-60s)' },
-      { type: 'perf', text: 'SSE invalidation debouncing (200ms batch) in useAgentStream and usePulseStream' },
-      { type: 'perf', text: 'OrganismCanvas wrapped in React.memo, selectedAgentId via ref' },
-      { type: 'perf', text: 'Global staleTime increased to 30s, removed aggressive refetchInterval default' },
-      { type: 'refactor', text: 'Removed Office tab from fleet page' },
-      { type: 'refactor', text: 'Reordered sidebar navigation sections' },
+      { type: 'feat', text: 'Multi-project support in sidebar navigation' },
+      { type: 'feat', text: 'Memory log with episodic and factual memory types' },
+      { type: 'perf', text: 'Reduced polling intervals across all hooks (30-60s)' },
+      { type: 'perf', text: 'SSE invalidation debouncing (200ms batch)' },
       { type: 'refactor', text: 'Rebranded UI with configurable project names' },
-    ],
-  },
-  {
-    version: '1.0.3',
-    date: '2026-03-05',
-    tag: 'patch',
-    changes: [
-      { type: 'fix', text: 'Donarg tileset scaling for correct pixel-perfect rendering' },
-      { type: 'feat', text: 'MetroCity sprite integration for agent characters' },
-      { type: 'feat', text: 'Market Intel dashboard with competitive analysis data' },
-    ],
-  },
-  {
-    version: '1.0.2',
-    date: '2026-03-04',
-    tag: 'patch',
-    changes: [
-      { type: 'feat', text: 'Full Donarg furniture catalog for office environment' },
-      { type: 'feat', text: 'Donarg tileset and MetroCity sprites visual overhaul' },
-      { type: 'refactor', text: 'Reference OfficeCanvas implementation adapted for Next.js' },
-    ],
-  },
-  {
-    version: '1.0.1',
-    date: '2026-03-03',
-    tag: 'patch',
-    changes: [
-      { type: 'fix', text: 'Rewrite OfficeCanvas with proper rendering pipeline' },
-      { type: 'fix', text: 'Map string agent IDs to numeric IDs for office rendering' },
-      { type: 'feat', text: 'OfficeCanvas component with game loop integration' },
-      { type: 'feat', text: 'Pixel-agents canvas engine integrated into lib/office/' },
     ],
   },
   {
@@ -67,12 +54,11 @@ const RELEASES: ReleaseEntry[] = [
     date: '2026-03-01',
     tag: 'major',
     changes: [
-      { type: 'feat', text: 'Initial Mission Control dashboard with Agent Fleet, System Pulse, Memory Log' },
-      { type: 'feat', text: 'Constellation graph visualization with force-directed layout' },
-      { type: 'feat', text: 'Real-time SSE pulse stream from OpenClaw' },
+      { type: 'feat', text: 'Initial dashboard with Agent Fleet, System Pulse, and Memory Log' },
+      { type: 'feat', text: 'Real-time SSE pulse stream from OpenClaw gateway' },
       { type: 'feat', text: 'Cost tracking with 24h/7d/30d breakdowns and per-agent attribution' },
-      { type: 'feat', text: 'Task Manager with sprint tracking and agent assignment' },
-      { type: 'feat', text: 'DS Parity QA reporting with component-level test results' },
+      { type: 'feat', text: 'Task manager with sprint tracking and agent assignment' },
+      { type: 'feat', text: 'Design system QA reporting with component-level results' },
       { type: 'feat', text: 'Identity and security monitoring dashboard' },
       { type: 'feat', text: 'Dark theme UI with sidebar navigation' },
       { type: 'feat', text: 'Setup wizard for OpenClaw configuration' },
@@ -118,58 +104,66 @@ export default function ReleasesPage() {
         </div>
       </div>
 
-      <div className="relative space-y-0">
-        {/* Timeline line */}
-        <div className="absolute left-[19px] top-8 bottom-0 w-px bg-border" />
+      {RELEASES.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <GitCommit className="h-10 w-10 text-text-muted mb-3" />
+          <p className="text-sm text-text-secondary">No releases yet.</p>
+          <p className="text-xs text-text-muted mt-1">Release history will appear here as versions are published.</p>
+        </div>
+      ) : (
+        <div className="relative space-y-0">
+          {/* Timeline line */}
+          <div className="absolute left-[19px] top-8 bottom-0 w-px bg-border" />
 
-        {RELEASES.map((release, idx) => (
-          <div key={release.version} className="relative pb-8">
-            {/* Timeline dot */}
-            <div className={cn(
-              'absolute left-[12px] top-1.5 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full border-2 border-border',
-              idx === 0 ? 'bg-accent' : 'bg-surface',
-            )}>
-              {idx === 0 && (
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-              )}
-            </div>
-
-            <div className="ml-12">
-              {/* Version header */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Tag className="h-3.5 w-3.5 text-text-muted" />
-                  <span className="font-mono text-sm font-semibold text-text-primary">
-                    v{release.version}
-                  </span>
-                </div>
-                <span className={cn(
-                  'rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase',
-                  TAG_STYLES[release.tag],
-                )}>
-                  {release.tag}
-                </span>
-                <span className="text-xs text-text-muted">{release.date}</span>
+          {RELEASES.map((release, idx) => (
+            <div key={release.version} className="relative pb-8">
+              {/* Timeline dot */}
+              <div className={cn(
+                'absolute left-[12px] top-1.5 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full border-2 border-border',
+                idx === 0 ? 'bg-accent' : 'bg-surface',
+              )}>
+                {idx === 0 && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                )}
               </div>
 
-              {/* Change list */}
-              <ul className="mt-3 space-y-1.5">
-                {release.changes.map((change, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className={cn(
-                      'mt-0.5 shrink-0 font-mono text-[10px] font-bold',
-                      TYPE_COLORS[change.type],
-                    )}>
-                      {TYPE_LABELS[change.type]}
+              <div className="ml-12">
+                {/* Version header */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-3.5 w-3.5 text-text-muted" />
+                    <span className="font-mono text-sm font-semibold text-text-primary">
+                      v{release.version}
                     </span>
-                    <span className="text-text-secondary">{change.text}</span>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                  <span className={cn(
+                    'rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase',
+                    TAG_STYLES[release.tag],
+                  )}>
+                    {release.tag}
+                  </span>
+                  <span className="text-xs text-text-muted">{release.date}</span>
+                </div>
+
+                {/* Change list */}
+                <ul className="mt-3 space-y-1.5">
+                  {release.changes.map((change, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className={cn(
+                        'mt-0.5 shrink-0 font-mono text-[10px] font-bold',
+                        TYPE_COLORS[change.type],
+                      )}>
+                        {TYPE_LABELS[change.type]}
+                      </span>
+                      <span className="text-text-secondary">{change.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
