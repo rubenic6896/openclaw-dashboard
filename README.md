@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/ocd-logo-dark.png" width="80" alt="OpenClaw Dashboard" />
+  <img src="./Gitlogo.png" width="400" alt="OpenClaw Dashboard" />
 </p>
 
 <h1 align="center">OpenClaw Dashboard</h1>
