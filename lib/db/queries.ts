@@ -493,6 +493,20 @@ export function getPractitionerSignalTypes(): Array<{ type: string; count: numbe
   `).all() as any[];
 }
 
+// --- Feed Counts (lightweight) ---
+
+export function getFeedCounts(): { marketIntel: number; techUpdates: number; practitionerSignals: number } {
+  const db = getDb();
+  const mi = db.prepare('SELECT COUNT(*) as c FROM market_signals WHERE deleted = 0').get() as any;
+  const tu = db.prepare('SELECT COUNT(*) as c FROM tech_updates WHERE deleted = 0').get() as any;
+  const ps = db.prepare('SELECT COUNT(*) as c FROM practitioner_signals WHERE deleted = 0').get() as any;
+  return {
+    marketIntel: mi?.c ?? 0,
+    techUpdates: tu?.c ?? 0,
+    practitionerSignals: ps?.c ?? 0,
+  };
+}
+
 // --- DS Run Reports ---
 
 export function insertDSRunReport(report: DSRunReport): void {
@@ -615,6 +629,117 @@ export function getDSDistinctBatches(): string[] {
   const db = getDb();
   return (db.prepare('SELECT DISTINCT batch FROM ds_run_reports WHERE batch IS NOT NULL ORDER BY batch').all() as any[])
     .map((r) => r.batch);
+}
+
+// --- Reference Files ---
+
+export function getReferenceFiles(opts?: { tag?: string; search?: string; limit?: number }): any[] {
+  const db = getDb();
+  const limit = opts?.limit || 100;
+  let sql = 'SELECT * FROM reference_files WHERE deleted = 0';
+  const params: any[] = [];
+  if (opts?.tag) {
+    sql += " AND tags_json LIKE ?";
+    params.push(`%"${opts.tag}"%`);
+  }
+  if (opts?.search) {
+    sql += ' AND (title LIKE ? OR content LIKE ?)';
+    params.push(`%${opts.search}%`, `%${opts.search}%`);
+  }
+  sql += ' ORDER BY updated_at DESC LIMIT ?';
+  params.push(limit);
+  return db.prepare(sql).all(...params) as any[];
+}
+
+export function getReferenceFile(id: string): any | undefined {
+  return getDb().prepare('SELECT * FROM reference_files WHERE id = ? AND deleted = 0').get(id);
+}
+
+export function insertReferenceFile(file: { title: string; content: string; tags?: string[] }): string {
+  const db = getDb();
+  const id = crypto.randomUUID();
+  db.prepare(`
+    INSERT INTO reference_files (id, title, content, tags_json)
+    VALUES (?, ?, ?, ?)
+  `).run(id, file.title, file.content, JSON.stringify(file.tags || []));
+  return id;
+}
+
+export function updateReferenceFile(id: string, updates: { title?: string; content?: string; tags?: string[] }): void {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+  if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
+  if (updates.content !== undefined) { fields.push('content = ?'); values.push(updates.content); }
+  if (updates.tags !== undefined) { fields.push('tags_json = ?'); values.push(JSON.stringify(updates.tags)); }
+  if (fields.length === 0) return;
+  fields.push("updated_at = datetime('now')");
+  values.push(id);
+  db.prepare(`UPDATE reference_files SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+}
+
+export function deleteReferenceFile(id: string): void {
+  getDb().prepare("UPDATE reference_files SET deleted = 1, updated_at = datetime('now') WHERE id = ?").run(id);
+}
+
+export function getReferenceFileTags(): string[] {
+  const db = getDb();
+  const rows = db.prepare('SELECT tags_json FROM reference_files WHERE deleted = 0').all() as any[];
+  const tagSet = new Set<string>();
+  for (const row of rows) {
+    try {
+      const tags: string[] = JSON.parse(row.tags_json || '[]');
+      tags.forEach(t => tagSet.add(t));
+    } catch { /* skip */ }
+  }
+  return [...tagSet].sort();
+}
+
+// --- Competitors ---
+
+export function getCompetitors(opts?: { limit?: number }): any[] {
+  const db = getDb();
+  const limit = opts?.limit || 100;
+  return db.prepare('SELECT * FROM competitors WHERE deleted = 0 ORDER BY name ASC LIMIT ?').all(limit) as any[];
+}
+
+export function getCompetitor(id: string): any | undefined {
+  return getDb().prepare('SELECT * FROM competitors WHERE id = ? AND deleted = 0').get(id);
+}
+
+export function insertCompetitor(comp: { name: string; url?: string; description?: string; category?: string }): string {
+  const db = getDb();
+  const id = comp.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  db.prepare(`
+    INSERT OR REPLACE INTO competitors (id, name, url, description, category)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, comp.name, comp.url || '', comp.description || '', comp.category || 'Uncategorized');
+  return id;
+}
+
+export function updateCompetitor(id: string, updates: {
+  name?: string; url?: string; description?: string; category?: string;
+  swot_json?: string; updates_json?: string; feedback_json?: string; last_updated?: string;
+  watched?: number;
+}): void {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+  for (const [key, val] of Object.entries(updates)) {
+    if (val !== undefined) { fields.push(`${key} = ?`); values.push(val); }
+  }
+  if (fields.length === 0) return;
+  values.push(id);
+  db.prepare(`UPDATE competitors SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+}
+
+export function deleteCompetitor(id: string): void {
+  getDb().prepare('UPDATE competitors SET deleted = 1 WHERE id = ?').run(id);
+}
+
+/** No-op — competitors are user-added, not seeded. */
+export function seedDefaultCompetitors(): void {
+  // Competitors start empty. Users add their own via the UI.
 }
 
 function rowToDSRunReport(row: any): DSRunReport {

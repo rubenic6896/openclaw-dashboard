@@ -4,11 +4,11 @@
 
 cd "$(dirname "$0")"
 
-PORT=3333
+PORT="${PORT:-3333}"
 
 # Check if already running
 if lsof -i :$PORT -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "Mission Control already running on port $PORT"
+  echo "OpenClaw Dashboard already running on port $PORT"
   open "http://localhost:$PORT"
   exit 0
 fi
@@ -21,7 +21,7 @@ fi
 
 # Build if needed
 if [ ! -d .next ]; then
-  echo "Building Mission Control..."
+  echo "Building OpenClaw Dashboard..."
   npm run build
 fi
 
@@ -34,7 +34,7 @@ SERVER_PID=$!
 # Wait for server to be ready
 for i in $(seq 1 30); do
   if curl -s "http://localhost:$PORT" >/dev/null 2>&1; then
-    echo "Mission Control is ready!"
+    echo "OpenClaw Dashboard is ready!"
     open "http://localhost:$PORT"
     break
   fi

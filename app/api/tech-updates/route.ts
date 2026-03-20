@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('[tech-updates] POST received:', Array.isArray(body) ? `${body.length} items` : '1 item');
     const items = Array.isArray(body) ? body : [body];
     for (const item of items) {
       if (!item.url || !item.category_id || !item.category_label || !item.title) {
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
         );
       }
       insertTechUpdate(item);
-      console.log('[tech-updates] Inserted:', item.url);
     }
     return NextResponse.json({ inserted: items.length });
   } catch (error: any) {

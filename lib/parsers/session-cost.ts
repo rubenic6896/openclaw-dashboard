@@ -81,7 +81,7 @@ export interface CostSnapshot {
 // ============================================
 
 const AGENT_DISPLAY_NAMES: Record<string, string> = {
-  main: 'Orchestrator',
+  main: 'OpenClaw',
   developer: 'Developer',
   'qa-frontend': 'QA Frontend',
   researcher: 'Researcher',

@@ -6,6 +6,7 @@ import { useAgentStream } from '@/hooks/useAgentStream';
 import { useDashboardStore } from '@/store/dashboard';
 import { formatCost, formatTokens } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { ErrorState } from '@/components/ErrorState';
 import StatusPill from '@/components/shared/StatusPill';
 import MetricCard from '@/components/shared/MetricCard';
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton';
@@ -32,8 +33,8 @@ type ViewTab = 'hierarchy' | 'organism';
 export default function FleetPage() {
   useAgentStream();
 
-  const { data: agentData, isLoading: agentsLoading } = useAgents();
-  const { data: gateway, isLoading: gatewayLoading } = useGateway();
+  const { data: agentData, isLoading: agentsLoading, error: agentsError, refetch: refetchAgents } = useAgents();
+  const { data: gateway, isLoading: gatewayLoading, error: gatewayError, refetch: refetchGateway } = useGateway();
   const { data: graph } = useConstellationGraph();
 
   const { selectedAgentId, setSelectedAgent } = useDashboardStore();
@@ -59,6 +60,17 @@ export default function FleetPage() {
   }, [agents]);
 
   const gatewayOnline = gateway?.pid !== null && gateway?.pid !== undefined;
+
+  const fleetError = agentsError || gatewayError;
+
+  if (fleetError) {
+    return (
+      <ErrorState
+        message={fleetError instanceof Error ? fleetError.message : 'Failed to load fleet data.'}
+        onRetry={() => { refetchAgents(); refetchGateway(); }}
+      />
+    );
+  }
 
   if (agentsLoading || gatewayLoading) {
     return (

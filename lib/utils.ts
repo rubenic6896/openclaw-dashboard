@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 export function formatCost(usd: number): string {
@@ -44,37 +44,9 @@ export function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
-export function getStatusColor(status: string): string {
-  switch (status) {
-    case 'online': case 'healthy': case 'done': case 'completed': case 'active': return 'text-status-green';
-    case 'idle': case 'degraded': case 'in-progress': case 'running': case 'partial': return 'text-status-amber';
-    case 'error': case 'down': case 'blocked': case 'failed': case 'critical': return 'text-status-red';
-    default: return 'text-text-muted';
-  }
-}
-
-export function getStatusBgColor(status: string): string {
-  switch (status) {
-    case 'online': case 'healthy': case 'done': case 'completed': case 'active': return 'bg-status-green';
-    case 'idle': case 'degraded': case 'in-progress': case 'running': case 'partial': return 'bg-status-amber';
-    case 'error': case 'down': case 'blocked': case 'failed': case 'critical': return 'bg-status-red';
-    default: return 'bg-text-muted';
-  }
-}
-
-export function getPriorityColor(priority: string): string {
-  switch (priority) {
-    case 'critical': return 'bg-status-red text-white';
-    case 'high': return 'bg-orange-500 text-white';
-    case 'medium': return 'bg-status-blue text-white';
-    case 'low': return 'bg-text-muted text-white';
-    default: return 'bg-surface text-text-secondary';
-  }
-}
-
 export function resolveHomePath(p: string): string {
   if (p.startsWith('~/')) {
-    return p.replace('~', process.env.HOME || '');
+    return p.replace('~', process.env.HOME || '/tmp');
   }
   return p;
 }
@@ -87,6 +59,16 @@ export function getOpenclawHome(): string {
 /** Default project repo path, overridable via PROJECT_REPO_PATH env var. */
 export function getProjectRepoPath(): string | null {
   return process.env.PROJECT_REPO_PATH || null;
+}
+
+export function getPriorityColor(priority: string): string {
+  switch (priority) {
+    case 'critical': return 'bg-red-500/20 text-red-400';
+    case 'high':     return 'bg-orange-500/20 text-orange-400';
+    case 'medium':   return 'bg-yellow-500/20 text-yellow-400';
+    case 'low':      return 'bg-blue-500/20 text-blue-400';
+    default:         return 'bg-gray-500/20 text-gray-400';
+  }
 }
 
 export function safeJsonParse<T>(text: string, fallback: T): T {

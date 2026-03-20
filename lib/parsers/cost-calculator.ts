@@ -38,7 +38,7 @@ const MODEL_PRICING: Record<string, { input: number; output: number; cacheRead: 
 export function getModelPricing(model: string) {
   // Normalize model name
   const normalizedModel = model.toLowerCase().replace(/[:/]/g, '-').replace(/^-/, '');
-  
+
   // Try exact match first
   if (MODEL_PRICING[model]) return MODEL_PRICING[model];
   if (MODEL_PRICING[normalizedModel]) return MODEL_PRICING[normalizedModel];

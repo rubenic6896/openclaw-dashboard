@@ -41,32 +41,30 @@ export default function ConstellationPage() {
   const totalCost = nodes.reduce((sum, n) => sum + (n.costUSD24h ?? 0), 0);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[#0a0c14]">
+    <div className="flex h-full flex-col" style={{ background: '#0a0c14' }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-border/50 bg-[#0f1117]/80 backdrop-blur-sm px-6 py-3">
+      <div className="page-header">
         <div className="flex items-center gap-4">
-          <h1 className="text-sm font-semibold text-text-primary tracking-tight">
-            Constellation
-          </h1>
-          <div className="h-4 w-px bg-border" />
+          <h1>Constellation</h1>
+          <div className="h-4 w-px" style={{ background: 'var(--separator)' }} />
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <Cpu className="h-3.5 w-3.5 text-text-muted" />
-              <span className="text-text-muted">Agents</span>
-              <span className="font-semibold text-text-primary">
+              <Cpu className="h-3.5 w-3.5" style={{ color: 'var(--text-tertiary)' }} />
+              <span style={{ color: 'var(--text-tertiary)' }}>Agents</span>
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {activeCount}/{totalCount}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-text-muted" />
-              <span className="text-text-muted">Tokens</span>
-              <span className="font-mono font-semibold text-text-primary">
+              <Zap className="h-3.5 w-3.5" style={{ color: 'var(--text-tertiary)' }} />
+              <span style={{ color: 'var(--text-tertiary)' }}>Tokens</span>
+              <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {formatTokens(totalTokens)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-text-muted">$</span>
-              <span className="font-mono font-semibold text-text-primary">
+              <span style={{ color: 'var(--text-tertiary)' }}>$</span>
+              <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {totalCost.toFixed(4)}
               </span>
             </div>
@@ -75,7 +73,14 @@ export default function ConstellationPage() {
 
         <div className="flex items-center gap-3">
           {!isLive && (
-            <div className="flex items-center gap-1.5 rounded-md border border-status-amber/30 bg-status-amber/10 px-2.5 py-1 text-[10px] font-medium text-status-amber">
+            <div
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[10px] font-medium"
+              style={{
+                border: '1px solid rgba(var(--system-orange-rgb, 255, 149, 0), 0.3)',
+                background: 'rgba(var(--system-orange-rgb, 255, 149, 0), 0.1)',
+                color: 'var(--system-orange)',
+              }}
+            >
               <WifiOff className="h-3 w-3" />
               Live data unavailable
             </div>
@@ -83,14 +88,25 @@ export default function ConstellationPage() {
           {isLive && (
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-green opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-status-green" />
+                <span
+                  className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                  style={{ background: 'var(--system-green)' }}
+                />
+                <span
+                  className="relative inline-flex h-2 w-2 rounded-full"
+                  style={{ background: 'var(--system-green)' }}
+                />
               </span>
-              <span className="text-[10px] font-medium text-status-green">LIVE</span>
+              <span
+                className="text-[10px] font-medium"
+                style={{ color: 'var(--system-green)' }}
+              >
+                LIVE
+              </span>
             </div>
           )}
           {graph?.computedAt && (
-            <span className="text-[10px] text-text-muted">
+            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
               Updated {formatRelative(graph.computedAt)}
             </span>
           )}
@@ -102,16 +118,31 @@ export default function ConstellationPage() {
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent" />
-              <p className="text-xs text-text-muted">Mapping constellation...</p>
+              <div
+                className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full"
+                style={{
+                  border: '2px solid var(--separator)',
+                  borderTopColor: 'var(--accent)',
+                }}
+              />
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Mapping constellation...
+              </p>
             </div>
           </div>
         ) : isError ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <WifiOff className="mx-auto mb-3 h-8 w-8 text-text-muted opacity-40" />
-              <p className="text-sm text-text-muted">Failed to load agent data</p>
-              <p className="mt-1 text-xs text-text-muted">Using fallback constellation</p>
+              <WifiOff
+                className="mx-auto mb-3 h-8 w-8 opacity-40"
+                style={{ color: 'var(--text-tertiary)' }}
+              />
+              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                Failed to load agent data
+              </p>
+              <p className="mt-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Using fallback constellation
+              </p>
             </div>
           </div>
         ) : (
@@ -130,32 +161,60 @@ export default function ConstellationPage() {
         )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 flex flex-col gap-2 rounded-lg border border-border/50 bg-[#0f1117]/80 backdrop-blur-sm px-3.5 py-3">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-0.5">
+        <div
+          className="absolute bottom-4 left-4 flex flex-col gap-2 rounded-lg px-3.5 py-3 backdrop-blur-sm"
+          style={{
+            border: '1px solid var(--separator)',
+            background: 'rgba(15, 17, 23, 0.8)',
+          }}
+        >
+          <span
+            className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
             Status
           </span>
-          <LegendItem color="bg-status-green" label="Active" />
-          <LegendItem color="bg-status-amber" label="Idle" />
-          <LegendItem color="bg-status-red" label="Error" />
-          <LegendItem color="bg-text-muted/50" label="Offline" />
-          <div className="my-1 h-px bg-border/50" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-0.5">
+          <LegendItem color="var(--system-green)" label="Active" />
+          <LegendItem color="var(--system-orange)" label="Idle" />
+          <LegendItem color="var(--system-red)" label="Error" />
+          <LegendItem color="color-mix(in srgb, var(--text-tertiary) 50%, transparent)" label="Offline" />
+          <div className="my-1 h-px" style={{ background: 'var(--separator)' }} />
+          <span
+            className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
             Edges
           </span>
           <div className="flex items-center gap-2">
-            <div className="h-0.5 w-4 bg-accent/40 rounded" />
-            <span className="text-[10px] text-text-muted">Delegation</span>
+            <div
+              className="h-0.5 w-4 rounded"
+              style={{ background: 'color-mix(in srgb, var(--accent) 40%, transparent)' }}
+            />
+            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+              Delegation
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative h-0.5 w-4 bg-accent/20 rounded">
-              <div className="absolute left-1 top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-accent" />
+            <div
+              className="relative h-0.5 w-4 rounded"
+              style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)' }}
+            >
+              <div
+                className="absolute left-1 top-1/2 h-1 w-1 -translate-y-1/2 rounded-full"
+                style={{ background: 'var(--accent)' }}
+              />
             </div>
-            <span className="text-[10px] text-text-muted">Pulse = Event</span>
+            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+              Pulse = Event
+            </span>
           </div>
         </div>
 
         {/* Interaction hint */}
-        <div className="absolute bottom-4 right-4 text-[10px] text-text-muted/60 italic">
+        <div
+          className="absolute bottom-4 right-4 text-[10px] italic"
+          style={{ color: 'color-mix(in srgb, var(--text-tertiary) 60%, transparent)' }}
+        >
           Hover to inspect &middot; Click to drill down
         </div>
       </div>
@@ -169,8 +228,10 @@ export default function ConstellationPage() {
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`h-2 w-2 rounded-full ${color}`} />
-      <span className="text-[10px] text-text-secondary">{label}</span>
+      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+      <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+        {label}
+      </span>
     </div>
   );
 }

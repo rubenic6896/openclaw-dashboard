@@ -14,6 +14,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Build-time placeholders so gateway SDK + requireEnv don't throw during page collection
+ENV OPENCLAW_GATEWAY_TOKEN=build-placeholder
+ENV OPENCLAW_HOME=/tmp
+ENV OPENCLAW_BIN=/usr/local/bin/openclaw
 RUN npm run build
 
 # ── Stage 3: Production runtime (standalone) ──

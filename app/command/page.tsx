@@ -12,6 +12,7 @@ import BacklogView from '@/components/command/BacklogView';
 import TaskModal from '@/components/command/TaskModal';
 import TaskCard from '@/components/command/TaskCard';
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton';
+import { ErrorState } from '@/components/ErrorState';
 
 import {
   Kanban,
@@ -50,8 +51,8 @@ const DESIGN_STATUS_GROUPS: {
 ];
 
 export default function CommandPage() {
-  const { data: taskData, isLoading: tasksLoading } = useTasks();
-  const { data: sprintData, isLoading: sprintsLoading } = useSprints();
+  const { data: taskData, isLoading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTasks();
+  const { data: sprintData, isLoading: sprintsLoading, error: sprintsError, refetch: refetchSprints } = useSprints();
 
   const selectedSprintId = useDashboardStore((s) => s.selectedSprintId);
   const setSelectedSprint = useDashboardStore((s) => s.setSelectedSprint);
@@ -168,6 +169,8 @@ export default function CommandPage() {
 
   const isLoading = tasksLoading || sprintsLoading;
 
+  const fetchError = tasksError || sprintsError;
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
@@ -178,6 +181,25 @@ export default function CommandPage() {
             <LoadingSkeleton key={i} variant="card" className="h-64" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <ErrorState
+        message={fetchError instanceof Error ? fetchError.message : 'Failed to load tasks or sprints'}
+        onRetry={() => { refetchTasks(); refetchSprints(); }}
+      />
+    );
+  }
+
+  if (sprints.length === 0 && allTasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-text-muted">
+        <Target className="h-10 w-10 mb-3 opacity-40" />
+        <p className="text-sm font-medium">No sprints or tasks yet</p>
+        <p className="mt-1 text-xs text-text-muted">Create a sprint or add tasks to get started.</p>
       </div>
     );
   }

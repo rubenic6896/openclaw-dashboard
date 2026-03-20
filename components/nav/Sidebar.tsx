@@ -367,7 +367,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="flex items-center gap-2 border-t border-border px-5 py-3">
-        <span className="text-[11px] text-text-muted">OpenClaw v1.1</span>
+        <span className="text-[11px] text-text-muted">OpenClaw v2.0</span>
         <Link
           href="/releases"
           className="rounded px-1.5 py-0.5 text-[10px] font-medium text-text-muted transition-colors hover:bg-surface-hover hover:text-text-secondary"

@@ -11,6 +11,7 @@ interface DashboardState {
   // UI state
   commandViewMode: 'kanban' | 'list' | 'pipeline';
   sidebarCollapsed: boolean;
+  logsOpen: boolean;
 
   // Alert badge
   unacknowledgedAlerts: number;
@@ -22,6 +23,7 @@ interface DashboardState {
   setSelectedMemory: (id: string | null) => void;
   setCommandViewMode: (mode: 'kanban' | 'list' | 'pipeline') => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setLogsOpen: (open: boolean) => void;
   setUnacknowledgedAlerts: (count: number) => void;
 }
 
@@ -32,6 +34,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   selectedMemoryId: null,
   commandViewMode: 'kanban',
   sidebarCollapsed: false,
+  logsOpen: false,
   unacknowledgedAlerts: 0,
 
   setSelectedAgent: (id) => set({ selectedAgentId: id }),
@@ -40,5 +43,6 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   setSelectedMemory: (id) => set({ selectedMemoryId: id }),
   setCommandViewMode: (mode) => set({ commandViewMode: mode }),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  setLogsOpen: (open) => set({ logsOpen: open }),
   setUnacknowledgedAlerts: (count) => set({ unacknowledgedAlerts: count }),
 }));

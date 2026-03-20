@@ -15,14 +15,14 @@ export function runDailyMetricsAggregation() {
 
   const totalCost = agents.reduce((sum, a) => sum + a.costUSD, 0);
   const totalTokens = agents.reduce((sum, a) => sum + a.tokensIn + a.tokensOut, 0);
-  
+
   const costByProvider: Record<string, number> = {};
   const costByAgent: Record<string, number> = {};
   for (const agent of agents) {
     costByProvider[agent.provider] = (costByProvider[agent.provider] || 0) + agent.costUSD;
     costByAgent[agent.name] = (costByAgent[agent.name] || 0) + agent.costUSD;
   }
-  
+
   upsertDailyCost(dateStr, {
     totalCost,
     totalTokens,
