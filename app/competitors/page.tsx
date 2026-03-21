@@ -478,7 +478,23 @@ export default function CompetitorsPage() {
     setDiscovering(true);
     setDiscoverError(null);
     try {
-      const res = await fetch('/api/competitors/discover', { method: 'POST' });
+      // Load project details from localStorage for context
+      let projectName = 'this product';
+      let projectDescription = '';
+      try {
+        const stored = JSON.parse(localStorage.getItem('mc-projects') || '[]');
+        const proj = stored.find((p: any) => p.id === activeProjectId);
+        if (proj) {
+          projectName = proj.label || projectName;
+          projectDescription = proj.description || '';
+        }
+      } catch { /* ignore */ }
+
+      const res = await fetch('/api/competitors/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: activeProjectId, projectName, projectDescription }),
+      });
       const data = await res.json();
       if (data.error) {
         setDiscoverError(data.error + (data.details ? `: ${data.details}` : ''));

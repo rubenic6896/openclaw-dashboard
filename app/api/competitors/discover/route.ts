@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCompetitors } from '@/lib/db/queries';
 
-// Configure your product context here for competitor discovery
-const PRODUCT_CONTEXT = process.env.COMPETITOR_PRODUCT_CONTEXT || `Your product is a software platform. Update this context in environment variable COMPETITOR_PRODUCT_CONTEXT or edit this file to describe your product and competitive landscape for better discovery results.`;
-
 function gatewayPort(): number {
   return parseInt(process.env.OPENCLAW_GATEWAY_PORT || '18789', 10);
 }
@@ -15,16 +12,24 @@ function gatewayToken(): string {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const projectId = body.projectId || 'default';
+  const projectName = body.projectName || 'this product';
+  const projectDescription = body.projectDescription || '';
   const existing = getCompetitors({ projectId });
   const existingNames = existing.map((c: any) => c.name).join(', ');
 
-  const prompt = `You are a competitive intelligence researcher.
+  // Build dynamic prompt based on project context
+  const contextBlock = projectDescription
+    ? `${projectName} — ${projectDescription}`
+    : `${projectName}. No detailed description was provided, so discover competitors based on the project name and any available context.`;
 
-${PRODUCT_CONTEXT}
+  const prompt = `You are a competitive intelligence researcher for ${projectName}.
 
-Already tracked competitors: ${existingNames}
+Product/Project context:
+${contextBlock}
 
-Find 5-10 NEW competitors or emerging startups in this space that are NOT in the list above. Focus on:
+Already tracked competitors: ${existingNames || 'None yet'}
+
+Find 5-10 NEW competitors or emerging startups in ${projectName}'s space that are NOT in the list above. Focus on:
 - Direct competitors offering similar core functionality
 - Adjacent tools that overlap with key features
 - Emerging startups disrupting this space
