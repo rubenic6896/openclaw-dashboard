@@ -674,11 +674,12 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
   }
 
   // Render a single nav link
-  function renderNavLink(item: NavItem, indent: number = 0) {
-    const isActive =
+  function renderNavLink(item: NavItem, indent: number = 0, isActiveProject: boolean = true) {
+    const isActive = isActiveProject && (
       item.href === '/'
         ? pathname === '/'
-        : pathname.startsWith(item.href);
+        : pathname.startsWith(item.href)
+    );
 
     const isUnread = item.feedKey && feedNew[item.feedKey];
     const Icon = item.icon;
@@ -798,7 +799,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
           {projects.map((project) => {
             const isProjectCollapsed = collapsedProjects.has(project.id);
             const hasUnread = projectHasUnread();
-            const isProjectActive = DEFAULT_PROJECT_ITEMS.some(
+            const isProjectActive = project.id === activeProjectId && DEFAULT_PROJECT_ITEMS.some(
               item => item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
             );
             const isConfirmingDelete = confirmDeleteId === project.id;
@@ -928,7 +929,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
                   >
                     {DEFAULT_PROJECT_ITEMS.map((item) => (
                       <div key={item.href} onClick={() => setActiveProjectId(project.id)}>
-                        {renderNavLink(item, collapsed ? 0 : 14)}
+                        {renderNavLink(item, collapsed ? 0 : 14, project.id === activeProjectId)}
                       </div>
                     ))}
                   </div>
