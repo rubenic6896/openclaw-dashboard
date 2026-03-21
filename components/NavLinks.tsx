@@ -674,7 +674,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
   }
 
   // Render a single nav link
-  function renderNavLink(item: NavItem, indent: number = 0, isActiveProject: boolean = true) {
+  function renderNavLink(item: NavItem, indent: number = 0, isActiveProject: boolean = true, onClickProject?: () => void) {
     const isActive = isActiveProject && (
       item.href === '/'
         ? pathname === '/'
@@ -688,6 +688,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
       <Link
         key={item.href}
         href={item.href}
+        onClick={onClickProject}
         className={`nav-item focus-ring ${isActive ? 'nav-item-active' : ''}`}
         aria-label={item.label}
         aria-current={isActive ? 'page' : undefined}
@@ -927,11 +928,9 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
                       marginTop: '1px',
                     }}
                   >
-                    {DEFAULT_PROJECT_ITEMS.map((item) => (
-                      <div key={item.href} onClick={() => setActiveProjectId(project.id)}>
-                        {renderNavLink(item, collapsed ? 0 : 14, project.id === activeProjectId)}
-                      </div>
-                    ))}
+                    {DEFAULT_PROJECT_ITEMS.map((item) =>
+                      renderNavLink(item, collapsed ? 0 : 14, project.id === activeProjectId, () => setActiveProjectId(project.id))
+                    )}
                   </div>
                 )}
               </div>
