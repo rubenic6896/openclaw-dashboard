@@ -12,6 +12,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CronJob } from '@/lib/types';
 import { useSettings } from '@/app/settings-provider';
+import { useDashboardStore } from '@/store/dashboard';
 
 function getInitials(name: string | null): string {
   if (!name) return '??'
@@ -437,6 +438,8 @@ function InlineProjectEdit({
 export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNode; collapsed?: boolean } = {}) {
   const pathname = usePathname();
   const { settings } = useSettings();
+  const activeProjectId = useDashboardStore(s => s.activeProjectId);
+  const setActiveProjectId = useDashboardStore(s => s.setActiveProjectId);
   const [agentCount, setAgentCount] = useState<number | null>(null);
   const [cronCount, setCronCount] = useState<number | null>(null);
   const [cronErrorCount, setCronErrorCount] = useState<number | null>(null);
@@ -553,7 +556,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
   // Fetch feed counts and compare to last-seen
   useEffect(() => {
     function fetchCounts() {
-      fetch('/api/feed-counts')
+      fetch(`/api/feed-counts?projectId=${activeProjectId}`)
         .then((r) => r.ok ? r.json() : null)
         .then((data: FeedCounts | null) => {
           if (!data) return;
@@ -570,7 +573,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
     fetchCounts();
     const interval = setInterval(fetchCounts, 60_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeProjectId]);
 
   // Mark feed as seen when user navigates to the page
   useEffect(() => {
@@ -807,7 +810,7 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
                   <div className="group" style={{ position: 'relative' }}>
                     <div className="flex items-center">
                         <button
-                          onClick={() => toggleProject(project.id)}
+                          onClick={() => { toggleProject(project.id); setActiveProjectId(project.id); }}
                           className="hover-bg flex-1 flex items-center gap-2 rounded-md text-left"
                           style={{
                             minHeight: '32px',
@@ -923,7 +926,11 @@ export function NavLinks({ bottomSlot, collapsed }: { bottomSlot?: React.ReactNo
                       marginTop: '1px',
                     }}
                   >
-                    {DEFAULT_PROJECT_ITEMS.map((item) => renderNavLink(item, collapsed ? 0 : 14))}
+                    {DEFAULT_PROJECT_ITEMS.map((item) => (
+                      <div key={item.href} onClick={() => setActiveProjectId(project.id)}>
+                        {renderNavLink(item, collapsed ? 0 : 14)}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

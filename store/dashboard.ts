@@ -8,6 +8,9 @@ interface DashboardState {
   selectedSprintId: string | null;
   selectedMemoryId: string | null;
 
+  // Project isolation
+  activeProjectId: string;
+
   // UI state
   commandViewMode: 'kanban' | 'list' | 'pipeline';
   sidebarCollapsed: boolean;
@@ -21,6 +24,7 @@ interface DashboardState {
   setSelectedTab: (tab: string) => void;
   setSelectedSprint: (id: string | null) => void;
   setSelectedMemory: (id: string | null) => void;
+  setActiveProjectId: (id: string) => void;
   setCommandViewMode: (mode: 'kanban' | 'list' | 'pipeline') => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setLogsOpen: (open: boolean) => void;
@@ -32,6 +36,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   selectedTab: 'fleet',
   selectedSprintId: null,
   selectedMemoryId: null,
+  activeProjectId: typeof window !== 'undefined' ? localStorage.getItem('mc-active-project') || 'default' : 'default',
   commandViewMode: 'kanban',
   sidebarCollapsed: false,
   logsOpen: false,
@@ -41,6 +46,10 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   setSelectedTab: (tab) => set({ selectedTab: tab }),
   setSelectedSprint: (id) => set({ selectedSprintId: id }),
   setSelectedMemory: (id) => set({ selectedMemoryId: id }),
+  setActiveProjectId: (id) => {
+    set({ activeProjectId: id });
+    if (typeof window !== 'undefined') localStorage.setItem('mc-active-project', id);
+  },
   setCommandViewMode: (mode) => set({ commandViewMode: mode }),
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   setLogsOpen: (open) => set({ logsOpen: open }),

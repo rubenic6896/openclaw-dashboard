@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton';
+import { useDashboardStore } from '@/store/dashboard';
 import RichTextEditor from '@/components/RichTextEditor';
 
 interface RefFile {
@@ -18,6 +19,7 @@ interface RefFile {
 }
 
 export default function ReferenceFilesPage() {
+  const activeProjectId = useDashboardStore(s => s.activeProjectId) || 'default';
   const [files, setFiles] = useState<RefFile[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -35,6 +37,7 @@ export default function ReferenceFilesPage() {
     const params = new URLSearchParams();
     if (activeTag) params.set('tag', activeTag);
     if (search) params.set('search', search);
+    params.set('projectId', activeProjectId);
     setError(null);
     setLoading(true);
     fetch(`/api/reference-files?${params}`)
@@ -42,11 +45,11 @@ export default function ReferenceFilesPage() {
       .then(d => setFiles(d.files || []))
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load reference files.'))
       .finally(() => setLoading(false));
-  }, [activeTag, search]);
+  }, [activeTag, search, activeProjectId]);
 
   const loadTags = useCallback(() => {
-    fetch('/api/reference-files?tags=1').then(r => r.json()).then(d => setAllTags(d.tags || [])).catch(() => {});
-  }, []);
+    fetch(`/api/reference-files?tags=1&projectId=${activeProjectId}`).then(r => r.json()).then(d => setAllTags(d.tags || [])).catch(() => {});
+  }, [activeProjectId]);
 
   useEffect(() => { loadFiles(); }, [loadFiles]);
   useEffect(() => { loadTags(); }, [loadTags]);
@@ -80,13 +83,13 @@ export default function ReferenceFilesPage() {
       await fetch('/api/reference-files', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: editTitle, content: editContent, tags }),
+        body: JSON.stringify({ title: editTitle, content: editContent, tags, projectId: activeProjectId }),
       });
     } else if (selected) {
       await fetch(`/api/reference-files/${selected.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: editTitle, content: editContent, tags }),
+        body: JSON.stringify({ title: editTitle, content: editContent, tags, projectId: activeProjectId }),
       });
     }
     setEditing(false);
@@ -96,7 +99,7 @@ export default function ReferenceFilesPage() {
   }
 
   async function handleDelete(id: string) {
-    await fetch(`/api/reference-files/${id}`, { method: 'DELETE' });
+    await fetch(`/api/reference-files/${id}?projectId=${activeProjectId}`, { method: 'DELETE' });
     if (selected?.id === id) { setSelected(null); setEditing(false); }
     loadFiles();
     loadTags();
@@ -114,7 +117,7 @@ export default function ReferenceFilesPage() {
     await fetch('/api/reference-files', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, content, tags: [] }),
+      body: JSON.stringify({ title, content, tags: [], projectId: activeProjectId }),
     });
     loadFiles();
     loadTags();

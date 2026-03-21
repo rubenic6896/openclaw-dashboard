@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || undefined;
     const fields = searchParams.get('fields');
-    const signals = getPractitionerSignals({ type });
+    const projectId = searchParams.get('projectId') || 'default';
+    const signals = getPractitionerSignals({ type, projectId });
 
     // Lightweight dedup mode: return only url + title (~90% smaller response)
     if (fields === 'dedup') {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const types = getPractitionerSignalTypes();
+    const types = getPractitionerSignalTypes({ projectId });
     return NextResponse.json({ signals, types });
   } catch (error: any) {
     return NextResponse.json({ error: error.message, signals: [], types: [] }, { status: 500 });
@@ -45,8 +46,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const projectId = Array.isArray(body) ? (body[0]?.projectId || 'default') : (body.projectId || 'default');
     const items = Array.isArray(body) ? body : [body];
-    
+
     for (const item of items) {
       // Runtime validation with Zod
       const parseResult = practitionerSignalSchema.safeParse(item);
@@ -76,6 +78,7 @@ export async function POST(request: NextRequest) {
         tags_json: JSON.stringify(validated.tags || []),
         date: validated.date,
         date_iso,
+        projectId: item.projectId || projectId,
       });
     }
     return NextResponse.json({ inserted: items.length });

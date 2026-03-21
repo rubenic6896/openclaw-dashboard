@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ErrorState } from '@/components/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStore } from '@/store/dashboard';
 import {
   Newspaper,
   ExternalLink,
@@ -53,13 +54,15 @@ interface Category {
 }
 
 export default function TechUpdatesPage() {
+  const activeProjectId = useDashboardStore(s => s.activeProjectId) || 'default';
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery<{ updates: TechUpdate[]; categories: Category[] }>({
-    queryKey: ['tech-updates', activeCategory],
+    queryKey: ['tech-updates', activeCategory, activeProjectId],
     queryFn: () => {
       const params = new URLSearchParams();
       if (activeCategory) params.set('category', activeCategory);
+      params.set('projectId', activeProjectId);
       return fetch(`/api/tech-updates?${params}`).then((r) => r.json());
     },
     refetchInterval: 60000,

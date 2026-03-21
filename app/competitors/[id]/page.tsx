@@ -8,6 +8,7 @@ import {
   Sparkles, DollarSign, Zap, MessageSquare,
 } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
+import { useDashboardStore } from '@/store/dashboard';
 
 interface Competitor {
   id: string;
@@ -57,6 +58,7 @@ interface ResearchResult {
 
 export default function CompetitorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const activeProjectId = useDashboardStore(s => s.activeProjectId) || 'default';
   const [competitor, setCompetitor] = useState<Competitor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +160,7 @@ export default function CompetitorDetailPage({ params }: { params: Promise<{ id:
     if (!competitor) return;
     setFetchingUpdates(true);
     try {
-      const res = await fetch('/api/market-intel?limit=100');
+      const res = await fetch(`/api/market-intel?limit=100&projectId=${activeProjectId}`);
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       const items = Array.isArray(data) ? data : data.items || data.signals || [];
@@ -186,7 +188,7 @@ export default function CompetitorDetailPage({ params }: { params: Promise<{ id:
     if (!competitor) return;
     setFetchingFeedback(true);
     try {
-      const res = await fetch('/api/practitioner-signals?limit=100');
+      const res = await fetch(`/api/practitioner-signals?limit=100&projectId=${activeProjectId}`);
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       const items = Array.isArray(data) ? data : data.items || data.signals || [];

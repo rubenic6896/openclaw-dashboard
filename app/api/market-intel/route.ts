@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || undefined;
     const fields = searchParams.get('fields');
-    const signals = getMarketSignals({ type });
+    const projectId = searchParams.get('projectId') || 'default';
+    const signals = getMarketSignals({ type, projectId });
 
     // Lightweight dedup mode: return only url + title (~90% smaller response)
     if (fields === 'dedup') {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const types = getMarketSignalTypes();
+    const types = getMarketSignalTypes({ projectId });
     return NextResponse.json({ signals, types });
   } catch (error: any) {
     console.error('[market-intel] GET error:', error.message, error.stack);
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const projectId = Array.isArray(body) ? (body[0]?.projectId || 'default') : (body.projectId || 'default');
     const items = Array.isArray(body) ? body : [body];
     for (const item of items) {
       if (!item.url || !item.type || !item.title) {
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-      insertMarketSignal(item);
+      insertMarketSignal({ ...item, projectId: item.projectId || projectId });
     }
     return NextResponse.json({ inserted: items.length });
   } catch (error: any) {

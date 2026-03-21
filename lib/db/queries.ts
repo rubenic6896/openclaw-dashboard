@@ -277,11 +277,16 @@ export function getAgentMetricsSummary(): Array<{
 
 // --- Tech Updates ---
 
-export function getTechUpdates(opts?: { limit?: number; category?: string }): any[] {
+export function getTechUpdates(opts?: { limit?: number; category?: string; projectId?: string }): any[] {
   const db = getDb();
   const limit = opts?.limit || 500;
+  const pid = opts?.projectId || null;
   let sql = 'SELECT * FROM tech_updates WHERE deleted = 0';
   const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
   if (opts?.category) {
     sql += ' AND category_id = ?';
     params.push(opts.category);
@@ -291,13 +296,18 @@ export function getTechUpdates(opts?: { limit?: number; category?: string }): an
   return db.prepare(sql).all(...params) as any[];
 }
 
-export function getTechUpdateCategories(): Array<{ id: string; label: string; icon: string; count: number }> {
+export function getTechUpdateCategories(opts?: { projectId?: string }): Array<{ id: string; label: string; icon: string; count: number }> {
   const db = getDb();
-  return db.prepare(`
-    SELECT category_id as id, category_label as label, category_icon as icon, COUNT(*) as count
-    FROM tech_updates WHERE deleted = 0
-    GROUP BY category_id ORDER BY count DESC
-  `).all() as any[];
+  const pid = opts?.projectId || null;
+  let sql = `SELECT category_id as id, category_label as label, category_icon as icon, COUNT(*) as count
+    FROM tech_updates WHERE deleted = 0`;
+  const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
+  sql += ' GROUP BY category_id ORDER BY count DESC';
+  return db.prepare(sql).all(...params) as any[];
 }
 
 // --- Todos ---
@@ -379,16 +389,18 @@ export function insertTechUpdate(update: {
   date?: string;
   source_ref?: string;
   date_iso?: string;
+  projectId?: string;
 }): void {
   const db = getDb();
   db.prepare(`
-    INSERT OR REPLACE INTO tech_updates (url, category_id, category_label, category_icon, title, summary, source, date, source_ref, date_iso)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO tech_updates (url, category_id, category_label, category_icon, title, summary, source, date, source_ref, date_iso, project_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     update.url, update.category_id, update.category_label,
     update.category_icon || '', update.title, update.summary || '',
     update.source || '', update.date || null, update.source_ref || null,
     update.date_iso || new Date().toISOString().slice(0, 10),
+    update.projectId || 'default',
   );
 }
 
@@ -406,24 +418,31 @@ export function insertMarketSignal(signal: {
   tags_json?: string;
   date?: string;
   date_iso?: string;
+  projectId?: string;
 }): void {
   const db = getDb();
   db.prepare(`
-    INSERT OR REPLACE INTO market_signals (url, type, source, competitor, source_ref, title, context, analysis, tags_json, date, date_iso)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO market_signals (url, type, source, competitor, source_ref, title, context, analysis, tags_json, date, date_iso, project_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     signal.url, signal.type, signal.source || '', signal.competitor || null,
     signal.source_ref || null, signal.title, signal.context || '',
     signal.analysis || '', signal.tags_json || '[]', signal.date || null,
     signal.date_iso || new Date().toISOString().slice(0, 10),
+    signal.projectId || 'default',
   );
 }
 
-export function getMarketSignals(opts?: { type?: string; limit?: number }): any[] {
+export function getMarketSignals(opts?: { type?: string; limit?: number; projectId?: string }): any[] {
   const db = getDb();
   const limit = opts?.limit || 100;
+  const pid = opts?.projectId || null;
   let sql = 'SELECT * FROM market_signals WHERE deleted = 0';
   const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
   if (opts?.type) {
     sql += ' AND type = ?';
     params.push(opts.type);
@@ -433,13 +452,18 @@ export function getMarketSignals(opts?: { type?: string; limit?: number }): any[
   return db.prepare(sql).all(...params) as any[];
 }
 
-export function getMarketSignalTypes(): Array<{ type: string; count: number }> {
+export function getMarketSignalTypes(opts?: { projectId?: string }): Array<{ type: string; count: number }> {
   const db = getDb();
-  return db.prepare(`
-    SELECT type, COUNT(*) as count
-    FROM market_signals WHERE deleted = 0
-    GROUP BY type ORDER BY count DESC
-  `).all() as any[];
+  const pid = opts?.projectId || null;
+  let sql = `SELECT type, COUNT(*) as count
+    FROM market_signals WHERE deleted = 0`;
+  const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
+  sql += ' GROUP BY type ORDER BY count DESC';
+  return db.prepare(sql).all(...params) as any[];
 }
 
 // --- Practitioner Signals ---
@@ -457,24 +481,31 @@ export function insertPractitionerSignal(signal: {
   tags_json?: string;
   date?: string;
   date_iso?: string;
+  projectId?: string;
 }): void {
   const db = getDb();
   db.prepare(`
-    INSERT OR REPLACE INTO practitioner_signals (url, type, platform, author, source_ref, title, verbatim, context, relevance, tags_json, date, date_iso)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO practitioner_signals (url, type, platform, author, source_ref, title, verbatim, context, relevance, tags_json, date, date_iso, project_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     signal.url, signal.type, signal.platform || '', signal.author || null,
     signal.source_ref || null, signal.title, signal.verbatim || '',
     signal.context || '', signal.relevance || 0, signal.tags_json || '[]',
     signal.date || null, signal.date_iso || new Date().toISOString().slice(0, 10),
+    signal.projectId || 'default',
   );
 }
 
-export function getPractitionerSignals(opts?: { type?: string; limit?: number }): any[] {
+export function getPractitionerSignals(opts?: { type?: string; limit?: number; projectId?: string }): any[] {
   const db = getDb();
   const limit = opts?.limit || 100;
+  const pid = opts?.projectId || null;
   let sql = 'SELECT * FROM practitioner_signals WHERE deleted = 0';
   const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
   if (opts?.type) {
     sql += ' AND type = ?';
     params.push(opts.type);
@@ -484,22 +515,30 @@ export function getPractitionerSignals(opts?: { type?: string; limit?: number })
   return db.prepare(sql).all(...params) as any[];
 }
 
-export function getPractitionerSignalTypes(): Array<{ type: string; count: number }> {
+export function getPractitionerSignalTypes(opts?: { projectId?: string }): Array<{ type: string; count: number }> {
   const db = getDb();
-  return db.prepare(`
-    SELECT type, COUNT(*) as count
-    FROM practitioner_signals WHERE deleted = 0
-    GROUP BY type ORDER BY count DESC
-  `).all() as any[];
+  const pid = opts?.projectId || null;
+  let sql = `SELECT type, COUNT(*) as count
+    FROM practitioner_signals WHERE deleted = 0`;
+  const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
+  sql += ' GROUP BY type ORDER BY count DESC';
+  return db.prepare(sql).all(...params) as any[];
 }
 
 // --- Feed Counts (lightweight) ---
 
-export function getFeedCounts(): { marketIntel: number; techUpdates: number; practitionerSignals: number } {
+export function getFeedCounts(opts?: { projectId?: string }): { marketIntel: number; techUpdates: number; practitionerSignals: number } {
   const db = getDb();
-  const mi = db.prepare('SELECT COUNT(*) as c FROM market_signals WHERE deleted = 0').get() as any;
-  const tu = db.prepare('SELECT COUNT(*) as c FROM tech_updates WHERE deleted = 0').get() as any;
-  const ps = db.prepare('SELECT COUNT(*) as c FROM practitioner_signals WHERE deleted = 0').get() as any;
+  const pid = opts?.projectId || null;
+  const suffix = pid ? ' AND project_id = ?' : '';
+  const miParams = pid ? [pid] : [];
+  const mi = db.prepare('SELECT COUNT(*) as c FROM market_signals WHERE deleted = 0' + suffix).get(...miParams) as any;
+  const tu = db.prepare('SELECT COUNT(*) as c FROM tech_updates WHERE deleted = 0' + suffix).get(...miParams) as any;
+  const ps = db.prepare('SELECT COUNT(*) as c FROM practitioner_signals WHERE deleted = 0' + suffix).get(...miParams) as any;
   return {
     marketIntel: mi?.c ?? 0,
     techUpdates: tu?.c ?? 0,
@@ -633,11 +672,16 @@ export function getDSDistinctBatches(): string[] {
 
 // --- Reference Files ---
 
-export function getReferenceFiles(opts?: { tag?: string; search?: string; limit?: number }): any[] {
+export function getReferenceFiles(opts?: { tag?: string; search?: string; limit?: number; projectId?: string }): any[] {
   const db = getDb();
   const limit = opts?.limit || 100;
+  const pid = opts?.projectId || null;
   let sql = 'SELECT * FROM reference_files WHERE deleted = 0';
   const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
   if (opts?.tag) {
     sql += " AND tags_json LIKE ?";
     params.push(`%"${opts.tag}"%`);
@@ -655,13 +699,13 @@ export function getReferenceFile(id: string): any | undefined {
   return getDb().prepare('SELECT * FROM reference_files WHERE id = ? AND deleted = 0').get(id);
 }
 
-export function insertReferenceFile(file: { title: string; content: string; tags?: string[] }): string {
+export function insertReferenceFile(file: { title: string; content: string; tags?: string[]; projectId?: string }): string {
   const db = getDb();
   const id = crypto.randomUUID();
   db.prepare(`
-    INSERT INTO reference_files (id, title, content, tags_json)
-    VALUES (?, ?, ?, ?)
-  `).run(id, file.title, file.content, JSON.stringify(file.tags || []));
+    INSERT INTO reference_files (id, title, content, tags_json, project_id)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, file.title, file.content, JSON.stringify(file.tags || []), file.projectId || 'default');
   return id;
 }
 
@@ -682,9 +726,16 @@ export function deleteReferenceFile(id: string): void {
   getDb().prepare("UPDATE reference_files SET deleted = 1, updated_at = datetime('now') WHERE id = ?").run(id);
 }
 
-export function getReferenceFileTags(): string[] {
+export function getReferenceFileTags(opts?: { projectId?: string }): string[] {
   const db = getDb();
-  const rows = db.prepare('SELECT tags_json FROM reference_files WHERE deleted = 0').all() as any[];
+  const pid = opts?.projectId || null;
+  let sql = 'SELECT tags_json FROM reference_files WHERE deleted = 0';
+  const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
+  const rows = db.prepare(sql).all(...params) as any[];
   const tagSet = new Set<string>();
   for (const row of rows) {
     try {
@@ -697,23 +748,32 @@ export function getReferenceFileTags(): string[] {
 
 // --- Competitors ---
 
-export function getCompetitors(opts?: { limit?: number }): any[] {
+export function getCompetitors(opts?: { limit?: number; projectId?: string }): any[] {
   const db = getDb();
   const limit = opts?.limit || 100;
-  return db.prepare('SELECT * FROM competitors WHERE deleted = 0 ORDER BY name ASC LIMIT ?').all(limit) as any[];
+  const pid = opts?.projectId || null;
+  let sql = 'SELECT * FROM competitors WHERE deleted = 0';
+  const params: any[] = [];
+  if (pid) {
+    sql += ' AND project_id = ?';
+    params.push(pid);
+  }
+  sql += ' ORDER BY name ASC LIMIT ?';
+  params.push(limit);
+  return db.prepare(sql).all(...params) as any[];
 }
 
 export function getCompetitor(id: string): any | undefined {
   return getDb().prepare('SELECT * FROM competitors WHERE id = ? AND deleted = 0').get(id);
 }
 
-export function insertCompetitor(comp: { name: string; url?: string; description?: string; category?: string }): string {
+export function insertCompetitor(comp: { name: string; url?: string; description?: string; category?: string; projectId?: string }): string {
   const db = getDb();
   const id = comp.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   db.prepare(`
-    INSERT OR REPLACE INTO competitors (id, name, url, description, category)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(id, comp.name, comp.url || '', comp.description || '', comp.category || 'Uncategorized');
+    INSERT OR REPLACE INTO competitors (id, name, url, description, category, project_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(id, comp.name, comp.url || '', comp.description || '', comp.category || 'Uncategorized', comp.projectId || 'default');
   return id;
 }
 

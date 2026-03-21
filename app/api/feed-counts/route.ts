@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getFeedCounts } from '@/lib/db/queries'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const counts = getFeedCounts()
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId') || 'default';
+    const counts = getFeedCounts({ projectId })
     const res = NextResponse.json(counts)
     res.headers.set('Cache-Control', 'public, max-age=30')
     return res

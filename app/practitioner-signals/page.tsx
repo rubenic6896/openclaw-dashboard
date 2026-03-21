@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ErrorState } from '@/components/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStore } from '@/store/dashboard';
 import {
   UserRound,
   ExternalLink,
@@ -42,15 +43,17 @@ const TYPE_META: Record<string, { label: string; color: string; icon: typeof Mes
 };
 
 export default function PractitionerSignalsPage() {
+  const activeProjectId = useDashboardStore(s => s.activeProjectId) || 'default';
   const [activeType, setActiveType] = useState<string | null>(null);
   const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, error, refetch } = useQuery<{ signals: PractitionerSignal[]; types: SignalType[] }>({
-    queryKey: ['practitioner-signals', activeType],
+    queryKey: ['practitioner-signals', activeType, activeProjectId],
     queryFn: () => {
       const params = new URLSearchParams();
       if (activeType) params.set('type', activeType);
+      params.set('projectId', activeProjectId);
       return fetch(`/api/practitioner-signals?${params}`).then((r) => r.json());
     },
     refetchInterval: 60000,

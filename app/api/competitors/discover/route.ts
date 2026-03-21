@@ -13,7 +13,9 @@ function gatewayToken(): string {
 }
 
 export async function POST(req: NextRequest) {
-  const existing = getCompetitors();
+  const body = await req.json().catch(() => ({}));
+  const projectId = body.projectId || 'default';
+  const existing = getCompetitors({ projectId });
   const existingNames = existing.map((c: any) => c.name).join(', ');
 
   const prompt = `You are a competitive intelligence researcher.

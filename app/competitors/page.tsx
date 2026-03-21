@@ -7,6 +7,7 @@ import {
   Activity, Clock, Shield, Eye, EyeOff, Pencil, Trash2, MoreHorizontal, Check,
 } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
+import { useDashboardStore } from '@/store/dashboard';
 
 interface Competitor {
   id: string;
@@ -379,6 +380,7 @@ function CompetitorCard({ comp, onToggleWatch, onEdit, onDelete }: {
 // ---------------------------------------------------------------------------
 
 export default function CompetitorsPage() {
+  const activeProjectId = useDashboardStore(s => s.activeProjectId) || 'default';
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -393,7 +395,7 @@ export default function CompetitorsPage() {
   function loadCompetitors() {
     setError(null);
     setLoading(true);
-    fetch('/api/competitors')
+    fetch(`/api/competitors?projectId=${activeProjectId}`)
       .then(r => {
         if (!r.ok) throw new Error('Failed to load competitors');
         return r.json();
@@ -408,7 +410,7 @@ export default function CompetitorsPage() {
       });
   }
 
-  useEffect(() => { loadCompetitors(); }, []);
+  useEffect(() => { loadCompetitors(); }, [activeProjectId]);
 
   const categories = useMemo(() =>
     Array.from(new Set(competitors.map(c => c.category))).sort(),
@@ -466,7 +468,7 @@ export default function CompetitorsPage() {
     await fetch('/api/competitors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, url, description, category }),
+      body: JSON.stringify({ name, url, description, category, projectId: activeProjectId }),
     });
     loadCompetitors();
     setShowAddModal(false);
@@ -494,7 +496,7 @@ export default function CompetitorsPage() {
     await fetch('/api/competitors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: d.name, url: d.url, description: d.description, category: d.category }),
+      body: JSON.stringify({ name: d.name, url: d.url, description: d.description, category: d.category, projectId: activeProjectId }),
     });
     loadCompetitors();
   }

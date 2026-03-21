@@ -443,4 +443,17 @@ const MIGRATIONS = [
     name: '021_add_competitors_watched',
     sql: `ALTER TABLE competitors ADD COLUMN watched INTEGER NOT NULL DEFAULT 0;`,
   },
+  {
+    name: '022_add_project_id_to_feeds',
+    sql: `
+      ALTER TABLE market_signals ADD COLUMN project_id TEXT NOT NULL DEFAULT 'default';
+      CREATE INDEX IF NOT EXISTS idx_market_signals_project ON market_signals(project_id);
+
+      ALTER TABLE tech_updates ADD COLUMN project_id TEXT NOT NULL DEFAULT 'default';
+      CREATE INDEX IF NOT EXISTS idx_tech_updates_project ON tech_updates(project_id);
+
+      ALTER TABLE practitioner_signals ADD COLUMN project_id TEXT NOT NULL DEFAULT 'default';
+      CREATE INDEX IF NOT EXISTS idx_practitioner_signals_project ON practitioner_signals(project_id);
+    `,
+  },
 ];

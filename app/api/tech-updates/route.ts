@@ -9,8 +9,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const fields = searchParams.get('fields');
+    const projectId = searchParams.get('projectId') || 'default';
 
-    const updates = getTechUpdates({ category, limit });
+    const updates = getTechUpdates({ category, limit, projectId });
 
     // Lightweight dedup mode: return only url + title (~90% smaller response)
     if (fields === 'dedup') {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const categories = getTechUpdateCategories();
+    const categories = getTechUpdateCategories({ projectId });
     return NextResponse.json({ updates, categories });
   } catch (error: any) {
     console.error('[tech-updates] GET error:', error.message, error.stack);
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const projectId = Array.isArray(body) ? (body[0]?.projectId || 'default') : (body.projectId || 'default');
     const items = Array.isArray(body) ? body : [body];
     for (const item of items) {
       if (!item.url || !item.category_id || !item.category_label || !item.title) {
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-      insertTechUpdate(item);
+      insertTechUpdate({ ...item, projectId: item.projectId || projectId });
     }
     return NextResponse.json({ inserted: items.length });
   } catch (error: any) {
